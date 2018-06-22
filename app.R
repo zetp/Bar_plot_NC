@@ -75,6 +75,10 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 
 #'  TO DO:
 #'  
+#'  on lauch plot executes 4 times - find why and fix it, maybe it is about ignoreInit?
+#'  
+#'  add some loading animation or spinner
+#'  
 #'  make READ ME PANEL - to change with Plot panel
 #'  make READ ME txt
 #'  Disable the point tab if mode is greyscale and other stuff like that?
@@ -84,6 +88,9 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 #'  allow for data editing with https://jrowen.github.io/rhandsontable/#introduction
 #'
 #'  Keep in mind: flowLayout (Lays out elements in a left-to-right, top-to-bottom arrangement )
+#'  verticalLayout - vertical placement
+#'  splitLayout - horizontal placemnt
+#'  
 #'
 #'  Shiny Cavas for resize - maybe better than shinyjqui??? https://github.com/metrumresearchgroup/shinyCanvas
 #'  
@@ -212,8 +219,15 @@ ui <- fluidPage(
         tabPanel("Data Editing"),
         tabPanel("Edit plot with ggEdit",
                  br(),
-                 actionButton("load_p", h5("Load plot"), width = '100%'),
-                 downloadButton("DL_plot2", label = h5("Download plot")),
+                 fluidRow(
+                   column(6,
+                 actionButton("load_p", "Load plot")),
+                   column(2,
+                          selectInput(inputId = "out_format2", label = NULL, # this removes the label
+                                      width = '100%', choices = c("pdf", "svg", "eps", "ps"), selected = "pdf")),
+                   column(4,
+                          downloadButton("DL_plot2", label = "Download plot"))
+                 ),
                  br(),
                  ggEditUI("ggEdit")
                  
@@ -448,22 +462,19 @@ output$distPlot <- renderPlot({
   ### Attempt to save plot ggEdit
   output$DL_plot2 = downloadHandler(
     filename = function(){
-      paste0("plot.", input$out_format)
+      paste0("plot.", input$out_format2)
     },
     content = function(file) {
       
-      # do mumbo jumbo to get the edited plot here:
+      # do mumbo-jumbo to get the edited plot here:
       # replace ggplot layers with updated layers and so for the theme
       # refer to r_values$out_ggE() with () as it is reactive value
       if (all(c("UpdatedThemes", "UpdatedLayers") %in% names(r_values$out_ggE()))) {
-        print("Theme + Lay")
         r_values$plot_out %>% rgg("", newLayer=r_values$out_ggE()$UpdatedLayers) +
           r_values$out_ggE()$UpdatedThemes -> updated_plot
       } else if ("UpdatedLayers" %in% names(r_values$out_ggE())){
-        print("Lay")
         r_values$plot_out %>% rgg("", newLayer=r_values$out_ggE()$UpdatedLayers) -> updated_plot
       } else if ("UpdatedThemes" %in% names(r_values$out_ggE())){
-        print("Theme")
         r_values$plot_out + r_values$out_ggE()$UpdatedThemes -> updated_plot
       } else {
         r_values$plot_out -> updated_plot
@@ -471,7 +482,7 @@ output$distPlot <- renderPlot({
       
       ppp <- input$distPlot_size # get the plot dimentions from shinyjqui
       ggsave(updated_plot, filename = file, 
-             device = input$out_format,  ### TO DO: add another format picker
+             device = input$out_format2,
              width = ppp$width/100, 
              height = ppp$height/100, 
              units = "in", dpi=100)}
