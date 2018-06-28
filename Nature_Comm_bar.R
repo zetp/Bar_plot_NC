@@ -181,7 +181,7 @@ bar_plt_points <- function(x, # the data frame
     
     #### Set Divergent color values if color scale is provided
     if (!missing(col_scale)&style == "divergent") {
-      col_scale3 <- list(scale_colour_manual(values= col_scale))}
+      col_scale3 <- list(scale_colour_manual(values= adjustcolor(col_scale,alpha.f = a)))}
       else {
         col_scale3 <- list(scale_colour_manual(values = rev(adjustcolor(brewer.pal(DS_, "Dark2"), alpha.f = a))))
       }
