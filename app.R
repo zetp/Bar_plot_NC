@@ -8,8 +8,10 @@
 #
 library(shiny)
 library(shinyWidgets)
+
 library(shinyjqui)
 library(ggedit)
+library(rhandsontable)
 
 library(dplyr)
 library(tidyr)
@@ -75,6 +77,9 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 
 #'  TO DO:
 #'  
+#'  ADD error on drawing plot or processing data - as with Data Editign it can be easily broken
+#'  
+#'  
 #'  on lauch plot executes 4 times - find why and fix it, maybe it is about ignoreInit?
 #'  
 #'  add some loading animation or spinner
@@ -82,7 +87,7 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 #'  make READ ME PANEL - to change with Plot panel
 #'  make READ ME txt
 #'  Disable the point tab if mode is greyscale and other stuff like that?
-#'  Hide sida panel when not in Main tab
+#'  Hide side panel when not in Main tab
 #'  hide show tab - UI tabsetPanel(id="xxx", tabPanel("Main")), Server if else showTab(inputId = "xxx", target = "Main", ) hideTab
 #'
 #'  allow for data editing with https://jrowen.github.io/rhandsontable/#introduction
@@ -216,7 +221,12 @@ ui <- fluidPage(
         uiOutput("jqui")
         ), # tab
         tabPanel("Read Me"),
-        tabPanel("Data Editing"),
+        tabPanel("Data Editing",
+                 rHandsontableOutput("RH"),
+                 actionButton("applyBtn", "Apply changes"),
+                 actionButton("refreshBtn", "refresh data"),
+                 downloadButton("saveBtn", "Save data")
+                 ),
         tabPanel("Edit plot with ggEdit",
                  br(),
                  fluidRow(
@@ -279,15 +289,14 @@ server <- function(input, output, session) {
     
     r_values$data_g1 <- fread(data_file$datapath,data.table=F, dec = sep_, check.names=T)
     
-    #calculate values for sample data
+    #calculate values for data
     temp_list <- data_processed()
     # transfer objects to the reactiveValues list
     for (i in names(temp_list)){r_values[[i]] <- temp_list[[i]]}
-    
+    # load vlaues to the input fields
     updateNumericInput(session, "Y_min_lim", value = r_values$y_limits[1])
     updateNumericInput(session, "Y_max_lim", value = r_values$y_limits[2])
     updateNumericInput(session, "Y_div", value = r_values$y_div)
-
 
   }, ignoreNULL = T) # ,ignoreNULL = T - do not attempt to draw if there is no data
 
@@ -440,10 +449,47 @@ output$distPlot <- renderPlot({
     # but it is not perfect sometimes point get rearranged when editing them with ggEdit
     # export variable for saving purposes
     r_values$out_ggE <- callModule(ggEdit,"ggEdit", obj=reactive(list(r_values$plot_out)), width=ppp$width,  height=ppp$height)
-    
-    
 })
   
+  ### Data Edit
+  output$RH <- renderRHandsontable({
+    DF <- r_values$data_g1 # tranfer the data to the internal variable - we want to work on copy and then apply changes with the button
+    
+    rhandsontable(DF, height = "75%", width = "90%",  rowHeaders = NULL, useTypes = F) %>%
+      hot_table(highlightCol = TRUE, highlightRow = TRUE) %>% 
+      hot_cols(manualColumnMove = T, manualColumnResize = T, fixedColumnsLeft=1) %>% 
+      hot_context_menu(allowRowEdit = T, allowColEdit = F) # disable adding columns as it results in crash
+  })
+  ### Data Edit - data saving
+  output$saveBtn = downloadHandler(
+    filename = function(){
+      paste0("data.csv")
+    },
+    content = function(file) {
+      write.table(hot_to_r(input$RH), file = file, quote=F, sep = "\t")
+      }
+  )
+  ### Data Edit - attempt to apply changes
+  observeEvent(input$applyBtn, {
+    r_values$data_g1 <- hot_to_r(input$RH)
+    
+    ### now we have to recalculate some stuff based on new data
+    #calculate values for sample data
+    temp_list <- data_processed()
+    # transfer objects to the reactiveValues list
+    for (i in names(temp_list)){r_values[[i]] <- temp_list[[i]]}
+    # load values to input fields
+    updateNumericInput(session, "Y_min_lim", value = r_values$y_limits[1])
+    updateNumericInput(session, "Y_max_lim", value = r_values$y_limits[2])
+    updateNumericInput(session, "Y_div", value = r_values$y_div)
+    
+  })
+  
+  ### Data Edit - refresh data - after loading new file
+  observeEvent(input$refreshBtn, {
+    # something here
+  })
+
   ### Attempt to save plot 
   output$DL_plot = downloadHandler(
     filename = function(){

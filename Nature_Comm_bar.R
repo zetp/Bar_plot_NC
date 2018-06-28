@@ -7,7 +7,6 @@ library(scales) # for oob to work
 
 ### TO DO: is numeric - zmienić ba integer albo numeric jest typeof i class
 ### TO DO: option for SD czy SEM [[sem <- function(x) sd(x)/sqrt(length(x))]]
-### outline for the bars - thickness?
 ### DS_ as not No of column but No of columns which contain numeric data - sum sapply is numeric
 
 ### helper functions:
@@ -27,13 +26,14 @@ library(scales) # for oob to work
 
 preprocess <- function(x){
   na<- names(x)
-  names(x) <- c("V1", na[2:length(na)]) # make sure that 1st column in named V1 as we will use this name in the code
+  
+  names(x) <- c("samples", na[2:length(na)]) # make sure that 1st column in named samples as we will use this name in the code
   
   DS_ <- length(na) - 1 # how many data series do we have?
   
-  data_g1 <- x %>% melt() %>%  group_by(variable, V1) %>% mutate(mean_ = mean(value), sd_ = sd(value))
+  data_g1 <- x %>% melt() %>%  group_by(variable, samples) %>% mutate(mean_ = mean(value), sd_ = sd(value))
   
-  data_g1$V1 <- factor(x$V1, levels = unique(x$V1)) # maintain order of data series as in input file on the plot
+  data_g1$samples <- factor(x$samples, levels = unique(x$samples)) # maintain order of data series as in input file on the plot
   
   out_ <- list(df=data_g1, series_No=DS_)
   
@@ -267,7 +267,7 @@ bar_plt_points <- function(x, # the data frame
       # main plot
       p_ <-
         ggplot(data_g1, aes(
-          x = V1,
+          x = samples,
           y = mean_,
           fill = variable
           )) + geom_bar(position = position_dodge(),  # this adds border arond bars colour="black", size = 1, # size 
