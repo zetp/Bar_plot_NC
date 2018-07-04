@@ -73,30 +73,26 @@ background_pals <- unlist(lapply(X = background_pals, FUN = linear_gradient))
 head(background_pals, 3)
 
 colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, length))
+
 ### end of pallete picker code
 
 #'  TO DO:
 #'  
 #'  ADD error on drawing plot or processing data - as with Data Editign it can be easily broken
 #'  
-#'  
 #'  on lauch plot executes 4 times - find why and fix it, maybe it is about ignoreInit?
 #'  
 #'  add some loading animation or spinner
 #'  
-#'  make READ ME PANEL - to change with Plot panel
 #'  make READ ME txt
 #'  Disable the point tab if mode is greyscale and other stuff like that?
 #'  Hide side panel when not in Main tab
 #'  hide show tab - UI tabsetPanel(id="xxx", tabPanel("Main")), Server if else showTab(inputId = "xxx", target = "Main", ) hideTab
-#'
-#'  allow for data editing with https://jrowen.github.io/rhandsontable/#introduction
-#'
+#'#'
 #'  Keep in mind: flowLayout (Lays out elements in a left-to-right, top-to-bottom arrangement )
 #'  verticalLayout - vertical placement
 #'  splitLayout - horizontal placemnt
 #'  
-#'
 #'  Shiny Cavas for resize - maybe better than shinyjqui??? https://github.com/metrumresearchgroup/shinyCanvas
 #'  
 #'  Use error handling for data processing pathway:
@@ -110,7 +106,7 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 ui <- fluidPage(
   
    # Application title
-  titlePanel("Bar plots with indicated measuremnts points", windowTitle = "Bar plots"),
+  titlePanel("Bar plots with indicated measurements points", windowTitle = "Bar plots"),
    
    # Sidebar with inputs 
    sidebarLayout(
@@ -212,7 +208,7 @@ ui <- fluidPage(
       mainPanel(tags$style("body {background-color: #EBEBEB; }"), # set bg color helps with plot resizing
         tabsetPanel(
         tabPanel("Plot",
-        jqui_resizabled(plotOutput('distPlot'),
+        jqui_resizable(plotOutput('distPlot'),
                         options = list(minHeight = 200, minWidth = 200,
                                        distance = 30,
                                        delay = 100,
@@ -221,11 +217,10 @@ ui <- fluidPage(
         uiOutput("jqui")
         ), # tab
         tabPanel("Read Me"),
-        tabPanel("Data Editing",
-                 rHandsontableOutput("RH"),
-                 actionButton("applyBtn", "Apply changes"),
-                 actionButton("refreshBtn", "refresh data"),
-                 downloadButton("saveBtn", "Save data")
+        tabPanel("Data Editing",br(),
+                 p(actionButton("applyBtn", "Apply changes"),
+                 downloadButton("saveBtn", "Download data")),
+                 rHandsontableOutput("RH")
                  ),
         tabPanel("Edit plot with ggEdit",
                  br(),
@@ -483,11 +478,6 @@ output$distPlot <- renderPlot({
     updateNumericInput(session, "Y_max_lim", value = r_values$y_limits[2])
     updateNumericInput(session, "Y_div", value = r_values$y_div)
     
-  })
-  
-  ### Data Edit - refresh data - after loading new file
-  observeEvent(input$refreshBtn, {
-    # something here
   })
 
   ### Attempt to save plot 

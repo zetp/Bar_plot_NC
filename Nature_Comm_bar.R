@@ -5,7 +5,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(scales) # for oob to work
 
-### TO DO: is numeric - zmienić ba integer albo numeric jest typeof i class
+### TO DO: is numeric -change albo numeric jest typeof i class
 ### TO DO: option for SD czy SEM [[sem <- function(x) sd(x)/sqrt(length(x))]]
 ### DS_ as not No of column but No of columns which contain numeric data - sum sapply is numeric
 
@@ -24,7 +24,7 @@ library(scales) # for oob to work
 #' @examples
 #' 
 
-preprocess <- function(x){
+preprocess <- function(x, SEM=F){
   na<- names(x)
   
   names(x) <- c("samples", na[2:length(na)]) # make sure that 1st column in named samples as we will use this name in the code
@@ -32,6 +32,11 @@ preprocess <- function(x){
   DS_ <- length(na) - 1 # how many data series do we have?
   
   data_g1 <- x %>% melt() %>%  group_by(variable, samples) %>% mutate(mean_ = mean(value), sd_ = sd(value))
+  
+  #rename_ - zmień nazwę kolumny na error_
+  
+  
+  sem <- function(x) sd(x)/sqrt(length(x))
   
   data_g1$samples <- factor(x$samples, levels = unique(x$samples)) # maintain order of data series as in input file on the plot
   
@@ -58,6 +63,8 @@ preprocess <- function(x){
 #' 
 
 axis_limits <- function(x, p = 5){ 
+  
+  # x[["sd_"]]
   
   max_ <- max(max(x$value), max(x$mean_+x$sd_)) # max is the point value or mean+SD whichever greater
   min_ <- min(min(x$value), min(x$mean_-x$sd_)) # set min, for negative values
@@ -181,7 +188,9 @@ bar_plt_points <- function(x, # the data frame
     
     #### Set Divergent color values if color scale is provided
     if (!missing(col_scale)&style == "divergent") {
-      col_scale3 <- list(scale_colour_manual(values= adjustcolor(col_scale,alpha.f = a)))}
+        col_scale3 <- list(scale_colour_manual(values= adjustcolor(col_scale,alpha.f = a)))}
+    if (length(col_scale) < DS_) {
+        col_scale3 <- list(scale_colour_manual(values= adjustcolor((colorRampPalette(col_scale)(DS_)),alpha.f = a)))} # expand color scale if necessary
       else {
         col_scale3 <- list(scale_colour_manual(values = rev(adjustcolor(brewer.pal(DS_, "Dark2"), alpha.f = a))))
       }
@@ -260,10 +269,13 @@ bar_plt_points <- function(x, # the data frame
       # color scale for bars with exception for custom mode
       # if there is no color sclae provided or Style is not custom provide default color scale
       if(!missing(col_scale)&style == "custom") {
-        col_scale2 <- scale_fill_manual(values = col_scale) #example brewer.pal(4, "Blues")) 
+        col_scale2 <- scale_fill_manual(values = col_scale); #example brewer.pal(4, "Blues")) 
+        if (length(col_scale) < DS_) {
+          col_scale2 <- scale_fill_manual(values=colorRampPalette(col_scale)(DS_))} # expand color scale if necessary
       } else {
         col_scale2 <- scale_fill_grey(start = 1 - 1 / DS_, end = 0) # kolory
       }
+      
       # main plot
       p_ <-
         ggplot(data_g1, aes(
