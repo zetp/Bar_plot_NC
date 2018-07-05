@@ -14,6 +14,7 @@ library(scales) # for oob to work
 #' preprocessing data function - this is helper function for bar_plt_points
 #' not intended to be used separately
 #' @param x - data
+#' @param E - type of error to calculate (SD or SEM)
 #' this function will make sure that data is formatted proprely for further pipeline
 #' 
 #' @return return list with two objects:
@@ -24,20 +25,18 @@ library(scales) # for oob to work
 #' @examples
 #' 
 
-preprocess <- function(x, SEM=F){
+preprocess <- function(x, E="SD"){
   na<- names(x)
   
   names(x) <- c("samples", na[2:length(na)]) # make sure that 1st column in named samples as we will use this name in the code
   
   DS_ <- length(na) - 1 # how many data series do we have?
   
-  data_g1 <- x %>% melt() %>%  group_by(variable, samples) %>% mutate(mean_ = mean(value), sd_ = sd(value))
+  sem <- function(x){sd(x)/sqrt(length(x))}
   
-  #rename_ - zmień nazwę kolumny na error_
-  
-  
-  sem <- function(x) sd(x)/sqrt(length(x))
-  
+  data_g1 <- x %>% melt() %>%  group_by(variable, samples) %>%
+    mutate_at("value", funs(mean, sd, sem)) %>% rename_("err_"=tolower(E), "mean_" = "mean") # tolower - SD to sd cause col names as function names
+
   data_g1$samples <- factor(x$samples, levels = unique(x$samples)) # maintain order of data series as in input file on the plot
   
   out_ <- list(df=data_g1, series_No=DS_)
@@ -64,10 +63,8 @@ preprocess <- function(x, SEM=F){
 
 axis_limits <- function(x, p = 5){ 
   
-  # x[["sd_"]]
-  
-  max_ <- max(max(x$value), max(x$mean_+x$sd_)) # max is the point value or mean+SD whichever greater
-  min_ <- min(min(x$value), min(x$mean_-x$sd_)) # set min, for negative values
+  max_ <- max(max(x$value), max(x$mean_+x$err_)) # max is the point value or mean+SD whichever greater
+  min_ <- min(min(x$value), min(x$mean_-x$err_)) # set min, for negative values
   
   if (min_>0){min_ <- 0} # for positive values set minimum to zero
   
@@ -134,6 +131,7 @@ axis_limits <- function(x, p = 5){
 #' @param xy_ts axis text size
 #' @param xy_ls axis label size
 #' @param col_scale - color scale for bars h_lines = F,
+#' @param Error - type of error to be calculated ("SD" or "SEM")
 #' @param h_lines - draw horizontal lines in plot backgroud
 #'   
 #' @return ggplot2 object
@@ -156,11 +154,12 @@ bar_plt_points <- function(x, # the data frame
            xy_ts,
            xy_ls,
            col_scale,
+           Error,
            h_lines = F,
            ps = 19) {
     # preprocessing data
     
-    out_ <- preprocess(x)
+    out_ <- preprocess(x, E=Error)
   
     data_g1 <-  out_$df
     
@@ -289,8 +288,8 @@ bar_plt_points <- function(x, # the data frame
       # error bars
       p_ <- p_ + geom_errorbar(
         aes(
-          ymin = mean_ - sd_,
-          ymax = mean_ + sd_
+          ymin = mean_ - err_,
+          ymax = mean_ + err_
         ),
         position = position_dodge(width = width),
         width = width / 2.5

@@ -145,6 +145,10 @@ ui <- fluidPage(
             downloadButton("DL_plot", label = HTML("Download<br>plot"))
             )),
             
+            radioGroupButtons(inputId = "err_select", label = "Choose error",
+                              choices = c("SD","SEM"),selected="SD",
+                              direction="horizontal", size = "sm", justified =T),
+            
             sliderInput("width_slider", "Bar width",
                         min = 0, max = 1, value = 0.8, step = 0.05
             ),
@@ -216,7 +220,12 @@ ui <- fluidPage(
                                        )), #jqui_resizabled( options = list(aspectRatio = TRUE))
         uiOutput("jqui")
         ), # tab
-        tabPanel("Read Me"),
+        tabPanel("Read Me", br(),
+                 p("what is it?, 
+                   options explamation,
+                   data editign,
+                   ggedit
+                   aknowlegements: people and packages")),
         tabPanel("Data Editing",br(),
                  p(actionButton("applyBtn", "Apply changes"),
                  downloadButton("saveBtn", "Download data")),
@@ -261,8 +270,8 @@ server <- function(input, output, session) {
   r_values$DS_ <- NULL
   
   data_processed <- reactive({
-    req(r_values$data_g1) # needs r_values$data_g1 for calculation
-    cess_ <- preprocess(r_values$data_g1) # process file using helper function
+    req(r_values$data_g1, input$err_select) # needs r_values$data_g1 for calculation
+    cess_ <- preprocess(r_values$data_g1, input$err_select) # process file using helper function
     limits_base <- cess_$df %>% axis_limits() # limits - needed for y axis limits
     out_ <- list(y_limits=limits_base$limits, # get data series No - needed for custom color scale for bars
                  y_div=limits_base$div,
@@ -294,7 +303,20 @@ server <- function(input, output, session) {
     updateNumericInput(session, "Y_div", value = r_values$y_div)
 
   }, ignoreNULL = T) # ,ignoreNULL = T - do not attempt to draw if there is no data
-
+  
+  # observe error change
+  observeEvent(input$err_select, {
+    
+    #re-calculate values for data
+    temp_list <- data_processed()
+    # transfer objects to the reactiveValues list
+    for (i in names(temp_list)){r_values[[i]] <- temp_list[[i]]}
+    # load vlaues to the input fields
+    updateNumericInput(session, "Y_min_lim", value = r_values$y_limits[1])
+    updateNumericInput(session, "Y_max_lim", value = r_values$y_limits[2])
+    updateNumericInput(session, "Y_div", value = r_values$y_div)
+    
+  }, ignoreNULL = T)
   
   ### renderUI output that is based on the data - AXIS
   output$inp_lim_max <- renderUI({
@@ -330,7 +352,7 @@ server <- function(input, output, session) {
 
 ### <Draw main plot>
 output$distPlot <- renderPlot({
-
+  print("R1!") # DEL
   # if no file provided then load Sample data
   if (is.null(r_values$data_g1)){
     r_values$data_g1 <- fread("Sample_data.txt",data.table=F, check.names=T) # no need to set searator
@@ -379,6 +401,7 @@ output$distPlot <- renderPlot({
     y_div = spacing_,
     col = input$col,
     col2 = input$col2,
+    Error = input$err_select,
     h_lines = input$h_lines,
     # commented line uses rep to make input of ifelse equal to the desired output.
     col_scale = col_scale, #ifelse(rep(input$reverse, DS_), rev(brewer.pal(DS_, input$col_palette)), brewer.pal(DS_, input$col_palette)),
@@ -394,7 +417,7 @@ output$distPlot <- renderPlot({
   # print size of plot
   output$jqui <- renderUI({
     ppp <- input$distPlot_size
-    tags$small(paste0("drag to resize plot (current size: ",ppp$width, " x ", ppp$height, ")"))
+    tags$small(paste0("drag to resize plot (current size: ",as.integer(ppp$width), " x ", as.integer(ppp$height), ")"))
   })
   # check render text if Color blind friendly
   output$Colorblind <- renderUI({
