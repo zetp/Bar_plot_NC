@@ -9,9 +9,10 @@
 library(shiny)
 library(shinyWidgets)
 
-library(shinyjqui)
-library(ggedit)
-library(rhandsontable)
+library(shinyjqui) # resizable plot
+library(ggedit) # editing of plot
+library(rhandsontable) # editing of data
+library(shinysky) # busy spinner with delay timer
 
 library(dplyr)
 library(tidyr)
@@ -211,8 +212,10 @@ ui <- fluidPage(
       # Show a plot of the generated distribution
       mainPanel(tags$style("body {background-color: #EBEBEB; }"), # set bg color helps with plot resizing
         tabsetPanel(
-        tabPanel("Plot",
-        jqui_resizable(plotOutput('distPlot'),
+          tabPanel("Plot",
+                 busyIndicator("rendering plot...",wait = 3000), # prograss idicator to use when it rendering takes than 3 sec
+                 jqui_resizable(
+                   plotOutput('distPlot'), # add spinner progress indicator
                         options = list(minHeight = 200, minWidth = 200,
                                        distance = 30,
                                        delay = 100,
@@ -222,6 +225,7 @@ ui <- fluidPage(
         ), # tab
         tabPanel("Read Me", br(),
                  p("what is it?, 
+                   about presets (options tailored for each preset)
                    options explamation,
                    data editign,
                    ggedit
@@ -352,7 +356,7 @@ server <- function(input, output, session) {
 
 ### <Draw main plot>
 output$distPlot <- renderPlot({
-  print("R1!") # DEL
+  
   # if no file provided then load Sample data
   if (is.null(r_values$data_g1)){
     r_values$data_g1 <- fread("Sample_data.txt",data.table=F, check.names=T) # no need to set searator
