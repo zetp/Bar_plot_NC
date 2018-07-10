@@ -215,7 +215,7 @@ ui <- fluidPage(
           tabPanel("Plot",
                  busyIndicator("rendering plot...",wait = 3000), # prograss idicator to use when it rendering takes than 3 sec
                  jqui_resizable(
-                   plotOutput('distPlot'), # add spinner progress indicator
+                   plotOutput('distPlot'),
                         options = list(minHeight = 200, minWidth = 200,
                                        distance = 30,
                                        delay = 100,
@@ -231,7 +231,7 @@ ui <- fluidPage(
                    ggedit
                    aknowlegements: people and packages")),
         tabPanel("Data Editing",br(),
-                 p(actionButton("applyBtn", "Apply changes"),
+                 p(shiny::actionButton("applyBtn", "Apply changes"),
                  downloadButton("saveBtn", "Download data")),
                  rHandsontableOutput("RH")
                  ),
@@ -479,7 +479,7 @@ output$distPlot <- renderPlot({
     
     rhandsontable(DF, height = "75%", width = "90%",  rowHeaders = NULL, useTypes = F) %>%
       hot_table(highlightCol = TRUE, highlightRow = TRUE) %>% 
-      hot_cols(manualColumnMove = T, manualColumnResize = T, fixedColumnsLeft=1) %>% 
+      hot_cols(manualColumnMove = F, manualColumnResize = T, fixedColumnsLeft=1) %>% # disable column rearangement as it does not result in data change 
       hot_context_menu(allowRowEdit = T, allowColEdit = F) # disable adding columns as it results in crash
   })
   ### Data Edit - data saving
@@ -494,6 +494,7 @@ output$distPlot <- renderPlot({
   ### Data Edit - attempt to apply changes
   observeEvent(input$applyBtn, {
     r_values$data_g1 <- hot_to_r(input$RH)
+    print(r_values$data_g1)
     
     ### now we have to recalculate some stuff based on new data
     #calculate values for sample data
