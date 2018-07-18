@@ -34,9 +34,15 @@ preprocess <- function(x, E="SD"){
   
   sem <- function(x){sd(x)/sqrt(length(x))}
   
-  data_g1 <- x %>% melt() %>%  group_by(variable, samples) %>%
+  x <- x %>% melt() %>% filter(complete.cases(.)) # complete.cases - removes NA
+  
+  data_g1 <- x %>% 
+    group_by(variable, samples) %>%
     mutate_at("value", funs(mean, sd, sem)) %>% rename_("err_"=tolower(E), "mean_" = "mean") # tolower - SD to sd cause col names as function names
 
+  # now change NA to zero in err_ column 0 the NA would be a result of single repetition
+  data_g1$err_[is.na(data_g1$err_)] <- 0
+  
   data_g1$samples <- factor(x$samples, levels = unique(x$samples)) # maintain order of data series as in input file on the plot
   
   out_ <- list(df=data_g1, series_No=DS_)
