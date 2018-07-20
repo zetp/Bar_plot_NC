@@ -80,7 +80,10 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 #'  TO DO:
 #'  
 #'  ==== If you click fast enought between styles (greyscale and any other style) then it flickers====
-#'  ==== but only with fresh start of this app
+#'  ==== but only with fresh start of this app ===
+#'  
+#'  === ticks spacing set to zero crashes the app ===
+#'  make reactive to changes that chacks if this vale is in the <-  THIS DOES NOT WORK
 #'  
 #'  ADD error on drawing plot or processing data - as with Data Editign it can be easily broken
 #'  
@@ -396,7 +399,7 @@ server <- function(input, output, session) {
     req(r_values$y_div)
     # ticks spacing
     numericInput(inputId = "Y_div", label = "Ticks spacing:",
-                 min = 0,
+                 min = r_values$y_div/100,
                  max = r_values$y_div*1000,
                  value = r_values$y_div,
                  step = r_values$y_div/100)
@@ -414,10 +417,14 @@ output$distPlot <- renderPlot({
   }
   
   # if else for ticks spacing (length(NULL) = 0)
+  
   if (length(input$Y_div)!= 1){
     spacing_ <- r_values$y_div
   } else {
-    spacing_ <- input$Y_div
+    ### try to catch too small y_div here - this crashes app
+    if(input$Y_div<(r_values$y_div/50)){
+      updateNumericInput(session, "Y_div", value = r_values$y_div/50)
+    } else {spacing_ <- input$Y_div}
   }
   
   #if else for reverse color scale
@@ -428,7 +435,6 @@ output$distPlot <- renderPlot({
   }
   
   r_values$plot_out <- 0
-  
   ### setting seed
   set.seed(input$seed_) # we have to set up seed here otherwise it will change when changing slider or other input
   # export plot to variable (for saving it in the downloadHandler below)
