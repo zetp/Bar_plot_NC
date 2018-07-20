@@ -79,6 +79,9 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 
 #'  TO DO:
 #'  
+#'  ==== If you click fast enought between styles (greyscale and any other style) then it flickers====
+#'  ==== but only with fresh start of this app
+#'  
 #'  ADD error on drawing plot or processing data - as with Data Editign it can be easily broken
 #'  
 #'  on lauch plot executes 4 times - find why and fix it, maybe it is about ignoreInit?
@@ -167,7 +170,7 @@ ui <- fluidPage(
                              wellPanel(
                                tags$small("set up random seed value for reproducible data pionts arrangement"),
                                splitLayout(
-                                 actionButton(inputId = "get_seed", label = HTML(paste("re-arrange<br>data points"))),
+                                 shiny::actionButton(inputId = "get_seed", label = HTML(paste("re-arrange<br>data points"))),
                                  numericInput("seed_", label = "random seed", min = 0, max = 100, value = 42)
                                )),
             selectInput(inputId = "point_shape", label = "Point shape", choices = 0:25, selected = 16),
@@ -239,7 +242,7 @@ ui <- fluidPage(
                  br(),
                  fluidRow(
                    column(6,
-                 actionButton("load_p", "Load plot")),
+                          shiny::actionButton("load_p", "Load plot")),
                    column(2,
                           selectInput(inputId = "out_format2", label = NULL, # this removes the label
                                       width = '100%', choices = c("pdf", "svg", "eps", "ps"), selected = "pdf")),
@@ -273,30 +276,72 @@ server <- function(input, output, session) {
   r_values$y_div <- NULL
   r_values$DS_ <- NULL
   
-  data_processed <- reactive({
+  ### functions
+  load_sample_data <- function(){
+    r_values$data_g1 <- fread("Sample_data.txt",data.table=F, check.names=T) 
+  }
+  
+  load_user_data <- function() {
+    sep_ <- ifelse(input$dot_comma==T,".",",")
+    data_file <- input$data_g
+    tryCatch({
+      r_values$data_g1 <- fread(data_file$datapath, data.table=F, dec = sep_, check.names=T)
+    },
+    warning=function(w){
+      #alert
+      sendSweetAlert(session = session,
+                     title = "Error",
+                     text = tags$span("Error occured while opening file."),
+                     type = "error",
+                     closeOnClickOutside = F)
+      #action
+      load_sample_data()
+    },
+    error=function(e){
+      #alert
+      sendSweetAlert(session = session,
+                     title = "Error",
+                     text = tags$span("Error occured while opening file."),
+                     type = "error",
+                     closeOnClickOutside = F)
+      #action
+      load_sample_data()}
+    )
+  }
+  
+  error_handle <- function(){
+    # show alert
+    sendSweetAlert(session = session,
+                   title = "Error",
+                   text = tags$span("Error occured while loading data",tags$br(),"Re-loading dataset"), #re-loading dataset
+                   type = "error",
+                   html=T,
+                   closeOnClickOutside = F)
+    # take action
+    if (!is.null(input$data_g)) {
+      load_user_data()
+    } else {
+      load_sample_data() # loading of default dataset
+    }}
+
+  data_processed <- function(){
     req(r_values$data_g1, input$err_select) # needs r_values$data_g1 for calculation
+    
+    tryCatch({
     cess_ <- preprocess(r_values$data_g1, input$err_select) # process file using helper function
-    limits_base <- cess_$df %>% axis_limits() # limits - needed for y axis limits
+    limits_base <- axis_limits(cess_$df) # limits - needed for y axis limits
+
     out_ <- list(y_limits=limits_base$limits, # get data series No - needed for custom color scale for bars
                  y_div=limits_base$div,
-                 DS_=cess_$series_No)
-    return(out_)
-  })
+                 DS_=cess_$series_No)},
+    
+    error=function(e){error_handle()},
+    warning=function(w){error_handle()
+      }
+  )
+    } # data_processed
   
-  # read file
-  observeEvent(input$data_g, {
-    
-    # get decimal separator form switch
-    sep_ <- ifelse(input$dot_comma==T,".",",")
-    
-    data_file <- input$data_g
-    
-    # read file
-    # TO DO: here add error handler as with wrong separator the app chrashes
-    # also identify where it fails
-    
-    r_values$data_g1 <- fread(data_file$datapath,data.table=F, dec = sep_, check.names=T)
-    
+  data_operations <- function(){
     #calculate values for data
     temp_list <- data_processed()
     # transfer objects to the reactiveValues list
@@ -305,21 +350,26 @@ server <- function(input, output, session) {
     updateNumericInput(session, "Y_min_lim", value = r_values$y_limits[1])
     updateNumericInput(session, "Y_max_lim", value = r_values$y_limits[2])
     updateNumericInput(session, "Y_div", value = r_values$y_div)
-
-  }, ignoreNULL = T) # ,ignoreNULL = T - do not attempt to draw if there is no data
+  }
+  
+  ### /functions
+    
+  # read file
+  observeEvent(input$data_g, {
+    
+    if (is.null(input$data_g)){
+      load_sample_data() # if no file provided then load Sample data
+    } else {
+      load_user_data() # if file provided load user data
+    }
+    
+  }, ignoreNULL = F) # ,ignoreNULL = T - do not attempt to process if there is no data
   
   # observe error change
   observeEvent(input$err_select, {
     
-    #re-calculate values for data
-    temp_list <- data_processed()
-    # transfer objects to the reactiveValues list
-    for (i in names(temp_list)){r_values[[i]] <- temp_list[[i]]}
-    # load vlaues to the input fields
-    updateNumericInput(session, "Y_min_lim", value = r_values$y_limits[1])
-    updateNumericInput(session, "Y_max_lim", value = r_values$y_limits[2])
-    updateNumericInput(session, "Y_div", value = r_values$y_div)
-    
+    data_operations() #re-calculate values for new error type
+
   }, ignoreNULL = T)
   
   ### renderUI output that is based on the data - AXIS
@@ -329,8 +379,8 @@ server <- function(input, output, session) {
     numericInput(inputId = "Y_max_lim", label = "Maximum:",
                  min = extendrange(r_values$y_limits, f=100)[1],
                  max = extendrange(r_values$y_limits, f=100)[2], 
-                 value = max(r_values$y_limits),
-                 step = abs(diff(extendrange(r_values$y_limits, f=100)))/10000)
+                 value = prettyNum(max(r_values$y_limits)),
+                 step = prettyNum(abs(diff(extendrange(r_values$y_limits, f=100)))/10000))
   })
   
   output$inp_lim_min <- renderUI({
@@ -353,18 +403,8 @@ server <- function(input, output, session) {
   })
   ### / renderUI output that is based on the data - AXIS
 
-
 ### <Draw main plot>
 output$distPlot <- renderPlot({
-  
-  # if no file provided then load Sample data
-  if (is.null(r_values$data_g1)){
-    r_values$data_g1 <- fread("Sample_data.txt",data.table=F, check.names=T) # no need to set searator
-    #calculate values for sample data
-    temp_list <- data_processed()
-    # transfer objects to the reactiveValues list
-    for (i in names(temp_list)){r_values[[i]] <- temp_list[[i]]}
-  }
   
   #if else for Y axis limits
   if (length(c(input$Y_min_lim, input$Y_max_lim))!=2 ){
@@ -387,9 +427,12 @@ output$distPlot <- renderPlot({
     brewer.pal(r_values$DS_, input$col_palette)
   }
   
+  r_values$plot_out <- 0
+  
   ### setting seed
   set.seed(input$seed_) # we have to set up seed here otherwise it will change when changing slider or other input
   # export plot to variable (for saving it in the downloadHandler below)
+  tryCatch({
   r_values$plot_out <- bar_plt_points(
     r_values$data_g1,
     style = input$style_select,
@@ -411,19 +454,35 @@ output$distPlot <- renderPlot({
     col_scale = col_scale, #ifelse(rep(input$reverse, DS_), rev(brewer.pal(DS_, input$col_palette)), brewer.pal(DS_, input$col_palette)),
     ps = as.numeric(input$point_shape)
   )
+  }, error=function(e){
+    # show alert
+    sendSweetAlert(session = session,
+                   title = "Error",
+                   text = tags$span("Error occured while rendering plottig",tags$br(),"Re-loading sample dataset"), #re-loading dataset
+                   type = "error",
+                   html=T,
+                   closeOnClickOutside = F)
+    # take action
+    load_sample_data()
+    })
   
   ### Execute plot
   r_values$plot_out
 })
 ### </Draw main plot>
 
+# react to data changes by recalculating axis limits etc
+observeEvent(r_values$data_g1, {
+  data_operations()
+})
   
   # print size of plot
   output$jqui <- renderUI({
     ppp <- input$distPlot_size
     tags$small(paste0("drag to resize plot (current size: ",as.integer(ppp$width), " x ", as.integer(ppp$height), ")"))
   })
-  # check render text if Color blind friendly
+  
+  # check and render text if Color blind friendly
   output$Colorblind <- renderUI({
     HTML(paste("<p>Color blind friendly:<b>", 
              (brewer.pal.info %>% subset(rownames(.) == input$col_palette) %>% .$colorblind), "</b></p>"))
@@ -438,7 +497,7 @@ output$distPlot <- renderPlot({
     updateNumericInput(session, "seed_", value = seed_new)
   })
 
-     # change possible choices based on selected style
+  # change possible choices based on selected style
   r_values$points_C <- observe(
      if (input$style_select %in% c("basic", "custom")) {
        updateSelectInput(session, inputId = "point_shape",
@@ -480,7 +539,7 @@ output$distPlot <- renderPlot({
     rhandsontable(DF, height = "75%", width = "90%",  rowHeaders = NULL, useTypes = F) %>%
       hot_table(highlightCol = TRUE, highlightRow = TRUE) %>% 
       hot_cols(manualColumnMove = F, manualColumnResize = T, fixedColumnsLeft=1) %>% # disable column rearangement as it does not result in data change 
-      hot_context_menu(allowRowEdit = T, allowColEdit = F) # disable adding columns as it results in crash
+      hot_context_menu(allowRowEdit = T, allowColEdit = F) # disable adding columns as it results in crash in hot_to_r function
   })
   ### Data Edit - data saving
   output$saveBtn = downloadHandler(
@@ -494,24 +553,11 @@ output$distPlot <- renderPlot({
   ### Data Edit - attempt to apply changes
   observeEvent(input$applyBtn, {
     r_values$data_g1 <- hot_to_r(input$RH)
-    print(r_values$data_g1)
-    
-    ### now we have to recalculate some stuff based on new data
-    #calculate values for sample data
-    temp_list <- data_processed()
-    # transfer objects to the reactiveValues list
-    for (i in names(temp_list)){r_values[[i]] <- temp_list[[i]]}
-    # load values to input fields
-    updateNumericInput(session, "Y_min_lim", value = r_values$y_limits[1])
-    updateNumericInput(session, "Y_max_lim", value = r_values$y_limits[2])
-    updateNumericInput(session, "Y_div", value = r_values$y_div)
-    
   })
 
-  ### Attempt to save plot 
+  ### Attempt to save plot
   output$DL_plot = downloadHandler(
     filename = function(){
-      
       paste0("plot.", input$out_format)
     },
     content = function(file) {
@@ -531,8 +577,7 @@ output$distPlot <- renderPlot({
     content = function(file) {
       
       # do mumbo-jumbo to get the edited plot here:
-      # replace ggplot layers with updated layers and so for the theme
-      # refer to r_values$out_ggE() with () as it is reactive value
+      # replace ggplot layers with updated layers and the same for the theme
       if (all(c("UpdatedThemes", "UpdatedLayers") %in% names(r_values$out_ggE()))) {
         r_values$plot_out %>% rgg("", newLayer=r_values$out_ggE()$UpdatedLayers) +
           r_values$out_ggE()$UpdatedThemes -> updated_plot
