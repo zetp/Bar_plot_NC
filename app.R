@@ -81,9 +81,6 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 #'  
 #'  === test all functions
 #'  
-#'  ==== If you click fast enought between styles (greyscale and any other style) then it flickers====
-#'  ==== but only with fresh start of this app ===
-#'  
 #'  make READ ME txt
 #'  Disable the point tab if mode is greyscale and other stuff like that?
 #'  Hide side panel when not in Main tab
@@ -204,7 +201,7 @@ ui <- fluidPage(
       
       # Show a plot of the generated distribution
       mainPanel(tags$style("body {background-color: #EBEBEB; }"), # set bg color helps with plot resizing
-        tabsetPanel(
+        tabsetPanel(id="main_tabs",
           tabPanel("Plot",
                  busyIndicator("rendering plot...",wait = 3000), # prograss idicator to use when it rendering takes than 3 sec
                  jqui_resizable(
@@ -343,6 +340,11 @@ server <- function(input, output, session) {
   }
   
   ### /functions
+  
+  # main tab panel observer
+  observeEvent(input$main_tabs, {
+    print(input$main_tabs)
+  })
     
   # read file
   observeEvent(input$data_g, {
@@ -491,7 +493,7 @@ observeEvent(r_values$data_g1, {
   })
 
   # change possible choices based on selected style
-  r_values$points_C <- observe(
+  observeEvent(input$style_select, {
      if (input$style_select %in% c("basic", "custom")) {
        updateSelectInput(session, inputId = "point_shape",
                          choices = c(0:25),
@@ -509,7 +511,7 @@ observeEvent(r_values$data_g1, {
                          choices = c(21:25),
                          selected = ifelse(input$point_shape>=21, input$point_shape, 21))
        r_values$pch_ <- c(21:25)
-     })
+     }})
 
   # plot for POINTS tab with helper function
   output$ShapePlot<- renderPlot({
