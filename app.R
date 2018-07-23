@@ -35,7 +35,7 @@ source("Nature_Comm_bar.R")
 colors_pal <- lapply(
   X = split(
     x = brewer.pal.info,
-    f = factor(brewer.pal.info$category, labels = c("ging", "Qualitative", "Sequential"))
+    f = factor(brewer.pal.info$category, labels = c("Diverging", "Qualitative", "Sequential"))
   ),
   FUN = rownames
 )
@@ -79,35 +79,22 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 
 #'  TO DO:
 #'  
+#'  === test all functions
+#'  
 #'  ==== If you click fast enought between styles (greyscale and any other style) then it flickers====
 #'  ==== but only with fresh start of this app ===
-#'  
-#'  === ticks spacing set to zero crashes the app ===
-#'  make reactive to changes that chacks if this vale is in the <-  THIS DOES NOT WORK
-#'  
-#'  ADD error on drawing plot or processing data - as with Data Editign it can be easily broken
-#'  
-#'  on lauch plot executes 4 times - find why and fix it, maybe it is about ignoreInit?
-#'  
-#'  add some loading animation or spinner
 #'  
 #'  make READ ME txt
 #'  Disable the point tab if mode is greyscale and other stuff like that?
 #'  Hide side panel when not in Main tab
 #'  hide show tab - UI tabsetPanel(id="xxx", tabPanel("Main")), Server if else showTab(inputId = "xxx", target = "Main", ) hideTab
-#'#'
+#'
 #'  Keep in mind: flowLayout (Lays out elements in a left-to-right, top-to-bottom arrangement )
 #'  verticalLayout - vertical placement
 #'  splitLayout - horizontal placemnt
 #'  
 #'  Shiny Cavas for resize - maybe better than shinyjqui??? https://github.com/metrumresearchgroup/shinyCanvas
-#'  
-#'  Use error handling for data processing pathway:
-#'  https://www.rforge.net/doc/packages/testit/assert.html
-#'  https://cran.r-project.org/web/packages/assertthat/README.html
-#'  https://www.r-bloggers.com/error-handling-in-r/
-#'  https://stat.ethz.ch/R-manual/R-devel/library/tools/html/assertCondition.html
-#'  
+
 
 # Define UI for application
 ui <- fluidPage(
@@ -464,7 +451,7 @@ output$distPlot <- renderPlot({
     # show alert
     sendSweetAlert(session = session,
                    title = "Error",
-                   text = tags$span("Error occured while rendering plottig",tags$br(),"Re-loading sample dataset"), #re-loading dataset
+                   text = tags$span("Error occured while rendering plot",tags$br(),"Re-loading sample dataset"), #re-loading dataset
                    type = "error",
                    html=T,
                    closeOnClickOutside = F)

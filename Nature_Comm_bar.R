@@ -193,12 +193,15 @@ bar_plt_points <- function(x, # the data frame
     
     #### Set Divergent color values if color scale is provided
     if (!missing(col_scale)&style == "divergent") {
-        col_scale3 <- list(scale_colour_manual(values= adjustcolor(col_scale,alpha.f = a)))}
+        col_scale3 <- list(scale_colour_manual(values= adjustcolor(col_scale,alpha.f = a)))
+        }
     if (length(col_scale) < DS_) {
-        col_scale3 <- list(scale_colour_manual(values= adjustcolor((colorRampPalette(col_scale)(DS_)),alpha.f = a)))} # expand color scale if necessary
-      else {
+        col_scale3 <- list(scale_colour_manual(values= adjustcolor((colorRampPalette(col_scale)(DS_)),alpha.f = a))) # expand color scale if necessary
+        } 
+    if (missing(col_scale)&style == "divergent") {
         col_scale3 <- list(scale_colour_manual(values = rev(adjustcolor(brewer.pal(DS_, "Dark2"), alpha.f = a))))
       }
+    
     
     ### ==== POINTS Styles definitions====
     # modes: basic, divergent, greyscale and bicolor
