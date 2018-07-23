@@ -119,7 +119,7 @@ ui <- fluidPage(
             )), column(3, tags$small("Decimal separator:"),
             switchInput("dot_comma", onLabel = "<b>.</b>", offLabel = "<b>,</b>", value = TRUE, size = "mini",
                         onStatus = "primary", offStatus = "primary"))),
-            
+        div(id="1",
             conditionalPanel(condition="input.conditionedPanels==1", # MAIN
                              
             fluidRow(
@@ -151,8 +151,9 @@ ui <- fluidPage(
             sliderInput("alpha_slider", "Points opacity",
               min = 0, max = 1, value = 1, step = 0.1 
             )
-            ),
-            
+            ) # cinditional panel
+            ), # div
+        div(id="2",
             conditionalPanel(condition="input.conditionedPanels==2", # POINTS
                              wellPanel(
                                tags$small("set up random seed value for reproducible data pionts arrangement"),
@@ -162,8 +163,10 @@ ui <- fluidPage(
                                )),
             selectInput(inputId = "point_shape", label = "Point shape", choices = 0:25, selected = 16),
             plotOutput("ShapePlot")
-            ),
+            ) # conditional panel
+            ), # div
             
+        div(id="3",
             conditionalPanel(condition="input.conditionedPanels==3", #COLOUR
                              wellPanel(
                              h4("Select colour:"),
@@ -182,8 +185,10 @@ ui <- fluidPage(
                              ),
                              uiOutput("Colorblind"),
                              checkboxInput("reverse", "reverse color scale", value = FALSE))
-            ),
+            ) # conditional panel
+            ), # div
             
+        div(id="4",
             conditionalPanel(condition="input.conditionedPanels==4", # AXIS
                              HTML(paste("<h4>Axes labels</h4>")),
                              textInput(inputId = "x_label", label = "X axis label", value = "", placeholder = "Enter text to be used as axis title" ),
@@ -196,7 +201,8 @@ ui <- fluidPage(
                              uiOutput("inp_y_div"),
                              checkboxInput("h_lines", "show horizontal lines", value = FALSE)
                              
-            )
+            ) # conditional panel
+            ) # div
             ), # sidebarPanel
       
       # Show a plot of the generated distribution
@@ -341,9 +347,21 @@ server <- function(input, output, session) {
   
   ### /functions
   
-  # main tab panel observer
-  observeEvent(input$main_tabs, {
-    print(input$main_tabs)
+  # main tab panel observer hide show UI parts
+  
+  observeEvent({
+    #input$conditionedPanels # no longer necessary
+    input$main_tabs},
+    {
+    if (input$main_tabs %in% c("Data Editing", "Read Me", "Edit plot with ggEdit")){
+      jqui_hide(paste0("#",input$conditionedPanels), effect = NULL) # hide current panel
+      jqui_hide("#conditionedPanels", effect = NULL) # hide panels tabs
+    }
+      
+    if (input$main_tabs == "Plot"){
+      jqui_show(paste0("#",input$conditionedPanels), effect = NULL)
+      jqui_show("#conditionedPanels", effect = NULL) # show panels tabs
+    }
   })
     
   # read file
