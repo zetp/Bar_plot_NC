@@ -230,7 +230,9 @@ ui <- fluidPage(
                  p(shiny::actionButton("applyBtn", "Apply changes"),
                  downloadButton("saveBtn", "Download data")),
                  rHandsontableOutput("RH")
-                 ),
+                 )
+        ## ======== comment out from here to diasble ggEdit panel
+        ,
         tabPanel("Edit plot with ggEdit",
                  br(),
                  fluidRow(
@@ -244,7 +246,7 @@ ui <- fluidPage(
                  ),
                  br(),
                  ggEditUI("ggEdit")
-                 
+
                  ## TO DO:
                  ## add this is editing based on ggEdit module that is made by ...
                  ## package not done by me
@@ -253,7 +255,10 @@ ui <- fluidPage(
                  ## to add legend go and position from none to one of the described then click apply
                  ## add may break error bars
                  ## add point editing might not work
-                 )
+                 ) # tab panel - ggEdit
+        ## ========= comment out to here
+        
+        
                 ) # tabsetPanel
       ))
    )
@@ -477,8 +482,8 @@ output$distPlot <- renderPlot({
                    closeOnClickOutside = F)
     # take action
     load_sample_data()
-    })
-  
+    }) # tryCatch
+
   ### Execute plot
   r_values$plot_out
 })
