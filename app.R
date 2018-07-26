@@ -13,6 +13,7 @@ library(shinyjqui) # resizable plot
 library(ggedit) # editing of plot
 library(rhandsontable) # editing of data
 library(shinysky) # busy spinner with delay timer
+library(shinyjs) # to reset fileInput
 
 library(dplyr)
 library(tidyr)
@@ -82,22 +83,32 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 #'  === test all functions
 #'  
 #'  make READ ME txt
-#'  Disable the point tab if mode is greyscale and other stuff like that?
-#'  Hide side panel when not in Main tab
-#'  hide show tab - UI tabsetPanel(id="xxx", tabPanel("Main")), Server if else showTab(inputId = "xxx", target = "Main", ) hideTab
 #'
 #'  Keep in mind: flowLayout (Lays out elements in a left-to-right, top-to-bottom arrangement )
 #'  verticalLayout - vertical placement
 #'  splitLayout - horizontal placemnt
 #'  
-#'  Shiny Cavas for resize - maybe better than shinyjqui??? https://github.com/metrumresearchgroup/shinyCanvas
+#'  Shiny Cavas for resize - alternative to shinyjqui??? https://github.com/metrumresearchgroup/shinyCanvas
 
 
 # Define UI for application
 ui <- fluidPage(
+  useShinyjs(), # Shinyjs
+  
+  # text formating for validate() messages
+  tags$head(
+    tags$style(HTML("
+                    .shiny-output-error-validation {
+                    color: #990000;
+                    font-weight: 400;
+                    line-height: 3;
+                    text-align:center
+                    }
+                    "))
+    ),
   
    # Application title
-  titlePanel("Bar plots with indicated measurements points", windowTitle = "Bar plots"),
+  titlePanel(title = HTML(paste("<center><h4>Point bar <small> – bar plots with indicated measurement points</small></h4></center>")), windowTitle = "Point bar"),
    
    # Sidebar with inputs 
    sidebarLayout(
@@ -106,7 +117,7 @@ ui <- fluidPage(
         tabsetPanel(type="pills",
           tabPanel("Main", value=1), 
           tabPanel("Points", value=2),
-          tabPanel("Colors", value=3),
+          tabPanel("Colour", value=3),
           tabPanel("Axis", value=4)
           , id = "conditionedPanels"),
         
@@ -141,7 +152,7 @@ ui <- fluidPage(
                               direction="horizontal", size = "sm", justified =T),
             
             sliderInput("width_slider", "Bar width",
-                        min = 0, max = 1, value = 0.8, step = 0.05
+                        min = 0, max = 1, value = 0.8, step = 0.01
             ),
             
             sliderInput("size_slider", "Points size",
@@ -149,7 +160,7 @@ ui <- fluidPage(
             ),
 
             sliderInput("alpha_slider", "Points opacity",
-              min = 0, max = 1, value = 1, step = 0.1 
+              min = 0, max = 1, value = 1, step = 0.01 
             )
             ) # cinditional panel
             ), # div
@@ -170,8 +181,8 @@ ui <- fluidPage(
             conditionalPanel(condition="input.conditionedPanels==3", #COLOUR
                              wellPanel(
                              h4("Select colour:"),
-                             colourInput("col", "Primary points colour", value = "blue", palette = "limited"),
-                             colourInput("col2", "Secondary points colour", value = "red", palette = "limited"),
+                             colourpicker::colourInput("col", "Primary points colour", value = "blue", palette = "limited"),
+                             colourpicker::colourInput("col2", "Secondary points colour", value = "red", palette = "limited"),
                              
                              hr(), # color palette input
                              pickerInput( inputId = "col_palette", label = "Colour palette",
@@ -191,13 +202,14 @@ ui <- fluidPage(
         div(id="4",
             conditionalPanel(condition="input.conditionedPanels==4", # AXIS
                              HTML(paste("<h4>Axes labels</h4>")),
+                             numericInput(inputId = "axis_text_size", label = "Axis text size", min = 0, max = 1000, value = 12),
                              textInput(inputId = "x_label", label = "X axis label", value = "", placeholder = "Enter text to be used as axis title" ),
                              textInput(inputId = "y_label", label = "Y axis label", value = "", placeholder = "Enter text to be used as axis title" ),
-                             numericInput(inputId = "axis_label_size", label = "axis label size", min = 0, max = 1000, value = 14),
-                             numericInput(inputId = "axis_text_size", label = "axis text size", min = 0, max = 1000, value = 12),
-                             HTML(paste("<h4>Y Axis values</h4>")),
+                             numericInput(inputId = "axis_label_size", label = "Axis label size", min = 0, max = 1000, value = 14),
+                             HTML(paste("<h4>Y axis values</h4>")),
+                             splitLayout(
                              uiOutput("inp_lim_max"),
-                             uiOutput("inp_lim_min"),
+                             uiOutput("inp_lim_min")),
                              uiOutput("inp_y_div"),
                              checkboxInput("h_lines", "show horizontal lines", value = FALSE)
                              
@@ -231,34 +243,33 @@ ui <- fluidPage(
                  downloadButton("saveBtn", "Download data")),
                  rHandsontableOutput("RH")
                  )
-        ## ======== comment out from here to diasble ggEdit panel
-        ,
-        tabPanel("Edit plot with ggEdit",
-                 br(),
-                 fluidRow(
-                   column(6,
-                          shiny::actionButton("load_p", "Load plot")),
-                   column(2,
-                          selectInput(inputId = "out_format2", label = NULL, # this removes the label
-                                      width = '100%', choices = c("pdf", "svg", "eps", "ps"), selected = "pdf")),
-                   column(4,
-                          downloadButton("DL_plot2", label = "Download plot"))
-                 ),
-                 br(),
-                 ggEditUI("ggEdit")
-
-                 ## TO DO:
-                 ## add this is editing based on ggEdit module that is made by ...
-                 ## package not done by me
-                 ## see manual: https://metrumresearchgroup.github.io/ggedit/
-                 ## add change text siez and make legend, + add to make outline of bars
-                 ## to add legend go and position from none to one of the described then click apply
-                 ## add may break error bars
-                 ## add point editing might not work
-                 ) # tab panel - ggEdit
-        ## ========= comment out to here
-        
-        
+        # ## ======== remove comment from here to enble ggEdit panel
+        # ,
+        # tabPanel("Edit plot with ggEdit",
+        #          br(),
+        #          p("This plot editing module uses", tags$a(href="https://github.com/metrumresearchgroup/ggedit", "ggEdit"),
+        #           "package and is experimental. To start editing load plot with", tags$b("Load plot"), "button. 
+        #           Editing of error bars will most likely result in incorrect position.
+        #           Editing of points will most likely result in module crash.
+        #           However you ca still do couple of things here like:",br(),
+        #           "- add outline to bars -> Update Bar plot layers -> colour",br(),
+        #           "- add legend Update Plot Theme -> legend -> position",br(),
+        #           "although most likely you will have to change text size: Update Plot Theme -> text -> size = 2 
+        #           and also change size of legend text Plot Theme -> text -> size = 10 etc."),
+        #          br(),
+        #          fluidRow(
+        #            column(6,
+        #                   shiny::actionButton("load_p", "Load plot")),
+        #            column(2,
+        #                   selectInput(inputId = "out_format2", label = NULL, # this removes the label
+        #                               width = '100%', choices = c("pdf", "svg", "eps", "ps"), selected = "pdf")),
+        #            column(4,
+        #                   downloadButton("DL_plot2", label = "Download plot"))
+        #          ),
+        #          br(),
+        #          ggEditUI("ggEdit")
+        #          ) # tab panel - ggEdit
+        # ## ========= remove comment to here
                 ) # tabsetPanel
       ))
    )
@@ -294,6 +305,7 @@ server <- function(input, output, session) {
                      closeOnClickOutside = F)
       #action
       load_sample_data()
+      reset('data_g') # Shinyjs
     },
     error=function(e){
       #alert
@@ -303,7 +315,9 @@ server <- function(input, output, session) {
                      type = "error",
                      closeOnClickOutside = F)
       #action
-      load_sample_data()}
+      load_sample_data()
+      reset('data_g') # Shinyjs
+      }
     )
   }
   
@@ -368,6 +382,11 @@ server <- function(input, output, session) {
       jqui_show("#conditionedPanels", effect = NULL) # show panels tabs
     }
   })
+  
+  # react to data changes by recalculating axis limits etc
+  observeEvent(r_values$data_g1, {
+    data_operations()
+  })
     
   # read file
   observeEvent(input$data_g, {
@@ -377,7 +396,6 @@ server <- function(input, output, session) {
     } else {
       load_user_data() # if file provided load user data
     }
-    
   }, ignoreNULL = F) # ,ignoreNULL = T - do not attempt to process if there is no data
   
   # observe error change
@@ -391,7 +409,7 @@ server <- function(input, output, session) {
   output$inp_lim_max <- renderUI({
     req(r_values$y_limits)
     # Y axis max
-    numericInput(inputId = "Y_max_lim", label = "Maximum:",
+    numericInput(inputId = "Y_max_lim", label = "Maximum",
                  min = extendrange(r_values$y_limits, f=100)[1],
                  max = extendrange(r_values$y_limits, f=100)[2], 
                  value = prettyNum(max(r_values$y_limits)),
@@ -401,7 +419,7 @@ server <- function(input, output, session) {
   output$inp_lim_min <- renderUI({
     req(r_values$y_limits)
     # Y axis min
-    numericInput(inputId = "Y_min_lim", label = "Minimum:",
+    numericInput(inputId = "Y_min_lim", label = "Minimum",
                  min = extendrange(r_values$y_limits, f=100)[1],
                  max = extendrange(r_values$y_limits, f=100)[2], 
                  value = prettyNum(min(r_values$y_limits)),
@@ -410,7 +428,7 @@ server <- function(input, output, session) {
   output$inp_y_div <- renderUI({
     req(r_values$y_div)
     # ticks spacing
-    numericInput(inputId = "Y_div", label = "Ticks spacing:",
+    numericInput(inputId = "Y_div", label = "Ticks spacing",
                  min = r_values$y_div/100,
                  max = r_values$y_div*1000,
                  value = r_values$y_div,
@@ -422,21 +440,22 @@ server <- function(input, output, session) {
 output$distPlot <- renderPlot({
   
   #if else for Y axis limits
+  validate(need(input$Y_min_lim, label= 'Y axis minimum'))
+  validate(need(input$Y_max_lim, label= 'Y axis maximum'))
+  
   if (length(c(input$Y_min_lim, input$Y_max_lim))!=2 ){
     limity_ <- r_values$y_limits # if there is not user input take estimation
   } else {
     limity_ <- c(input$Y_min_lim, input$Y_max_lim) # else take user input
   }
   
+  validate(need(input$Y_div, label= 'Ticks spacing'))
   # if else for ticks spacing (length(NULL) = 0)
-  
   if (length(input$Y_div)!= 1){
     spacing_ <- r_values$y_div
   } else {
-    ### try to catch too small y_div here - this crashes app
-    if(input$Y_div<(r_values$y_div/50)){
-      updateNumericInput(session, "Y_div", value = r_values$y_div/50)
-    } else {spacing_ <- input$Y_div}
+    validate(need(input$Y_div>(r_values$y_div/50), 'Tick spacing value is too small'), errorClass = "warning")
+    spacing_ <- input$Y_div
   }
   
   #if else for reverse color scale
@@ -448,6 +467,7 @@ output$distPlot <- renderPlot({
   
   r_values$plot_out <- 0
   ### setting seed
+  validate(need(input$seed_, label= 'random seed'))
   set.seed(input$seed_) # we have to set up seed here otherwise it will change when changing slider or other input
   # export plot to variable (for saving it in the downloadHandler below)
   tryCatch({
@@ -482,17 +502,13 @@ output$distPlot <- renderPlot({
                    closeOnClickOutside = F)
     # take action
     load_sample_data()
+    reset("data_g") # Shinyjs
     }) # tryCatch
 
   ### Execute plot
   r_values$plot_out
 })
 ### </Draw main plot>
-
-# react to data changes by recalculating axis limits etc
-observeEvent(r_values$data_g1, {
-  data_operations()
-})
   
   # print size of plot
   output$jqui <- renderUI({
@@ -500,7 +516,7 @@ observeEvent(r_values$data_g1, {
     tags$small(paste0("drag to resize plot (current size: ",as.integer(ppp$width), " x ", as.integer(ppp$height), ")"))
   })
   
-  # check and render text if Color blind friendly
+  # check and render text if Colour blind friendly
   output$Colorblind <- renderUI({
     HTML(paste("<p>Color blind friendly:<b>", 
              (brewer.pal.info %>% subset(rownames(.) == input$col_palette) %>% .$colorblind), "</b></p>"))

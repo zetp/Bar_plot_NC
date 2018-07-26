@@ -5,8 +5,8 @@ library(ggplot2)
 library(RColorBrewer)
 library(scales) # for oob to work
 
-### TO DO: is numeric -change albo numeric jest typeof i class
-### TO DO: option for SD czy SEM [[sem <- function(x) sd(x)/sqrt(length(x))]]
+### Things to consider: 
+### is numeric -change albo numeric jest typeof i class
 ### DS_ as not No of column but No of columns which contain numeric data - sum sapply is numeric
 
 ### helper functions:
@@ -22,7 +22,7 @@ library(scales) # for oob to work
 #' "series_No" - number of data series detected in the data provided
 #' @export
 #'
-#' @examples
+#' @examples iris %>% dplyr::select(Species, everything()) %>% preprocess()
 #' 
 
 preprocess <- function(x, E="SD"){
@@ -52,7 +52,7 @@ preprocess <- function(x, E="SD"){
 
 #' this function determines Y axis limits - this is helper function for bar_plt_points
 #' this function only works on pre defined names in provided data frame
-#' and is intended to be use in pipline with putput of preprocess() function
+#' and is intended to be use in pipline with output of preprocess() function
 #' NOT for general use
 #'
 #' @param x - properly formatted data frame (output of preprocess funtion)
@@ -64,7 +64,7 @@ preprocess <- function(x, E="SD"){
 #' "max" - minimum value in provided data (does not include the margin)
 #' @export
 #'
-#' @examples
+#' @examples iris %>% dplyr::select(Species, everything()) %>% preprocess() %>% .$df %>% axis_limits()
 #' 
 
 axis_limits <- function(x, p = 5){ 
@@ -143,7 +143,7 @@ axis_limits <- function(x, p = 5){
 #' @return ggplot2 object
 #' @export 
 #'
-#' @examples iris %>% select(Species, everything()) %>% bar_plt_points(style = "div", width = 0.7, col = "red", seed = 15,  ps =18)
+#' @examples iris %>% dplyr::select(Species, everything()) %>% bar_plt_points(style = "div", width = 0.7, col = "red", seed = 15,  ps =18)
 
 bar_plt_points <- function(x, # the data frame
            style = "basic",
@@ -159,8 +159,8 @@ bar_plt_points <- function(x, # the data frame
            x_l,
            xy_ts,
            xy_ls,
-           col_scale,
-           Error,
+           col_scale = NULL,
+           Error = "SD",
            h_lines = F,
            ps = 19) {
     # preprocessing data
@@ -189,6 +189,11 @@ bar_plt_points <- function(x, # the data frame
       pre_ <- pretty(y_limits, n = 10)
     } else {
       pre_ <- seq(y_limits[1], y_limits[2], by = y_div) # else use suer provided values 
+    }
+    
+    ### if no color scale use default
+    if(is.null(col_scale)){
+      col_scale <- rev(brewer.pal(DS_, "Dark2"))
     }
     
     #### Set Divergent color values if color scale is provided
