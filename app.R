@@ -25,7 +25,7 @@ library(colourpicker)
 library(RColorBrewer)
 
 #options(shiny.port=7777)
-#options(shiny.host="192.168.136.219")
+#options(shiny.host="192.168.136.3")
 
 source("Nature_Comm_bar.R")
 

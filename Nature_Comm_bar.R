@@ -118,7 +118,7 @@ axis_limits <- function(x, p = 5){
 #' "basic" - single color,
 #' "divergent" - divergent colors differnet for each condition,
 #' "greyscale" - grayscale version - to aviod color usage and preserve figure in grayscale,
-#' "bicolor" - two colors for dots: above the mean (col, see below) and below or equal to the mean (col2, see below),
+#' "bicolour" - two colors for dots: above the mean (col, see below) and below or equal to the mean (col2, see below),
 #' "custom" - lets you customize the color of bars and points,
 #' @param width width of bars (as fraction, default 0.8)
 #' @param point_size size of point (default 2.5)
@@ -208,7 +208,7 @@ bar_plt_points <- function(x, # the data frame
         } 
 
     ### ==== POINTS Styles definitions====
-    # modes: basic, divergent, greyscale and bicolor
+    # modes: basic, divergent, greyscale and bicolour
     
       ## basic version single color - DEFAULT mode
       S_basic <- list(geom_jitter(
@@ -242,7 +242,7 @@ bar_plt_points <- function(x, # the data frame
       ), scale_colour_manual(values = rep(grey(0, alpha = a), DS_)) # add as many as No of data series
       )
 
-      ## bicolor different colors below above average value for each series
+      ## bicolour different colors below above average value for each series
       S_ab <- list(geom_jitter(
         aes(y = value,
             group =  variable,
@@ -272,7 +272,7 @@ bar_plt_points <- function(x, # the data frame
       style,
       "divergent" = S_div,
       "greyscale" = S_gs,
-      "bicolor" = S_ab,
+      "bicolour" = S_ab,
       "custom" = S_cust,
       S_basic # default mode
       )  
