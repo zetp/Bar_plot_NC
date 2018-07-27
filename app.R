@@ -108,7 +108,7 @@ ui <- fluidPage(
     ),
   
    # Application title
-  titlePanel(title = HTML(paste("<center><h4>Point bar <small> – bar plots with indicated measurement points</small></h4></center>")), windowTitle = "Point bar"),
+  titlePanel(title = HTML(paste("<center><h4>PointBar <small> – bar plots with indicated measurement points</small></h4></center>")), windowTitle = "Point bar"),
    
    # Sidebar with inputs 
    sidebarLayout(
@@ -136,7 +136,7 @@ ui <- fluidPage(
             fluidRow(
               column(6, tags$b(
             radioGroupButtons(inputId = "style_select", label = "Choose style",
-                  choices = c("basic","bicolor","greyscale","divergent","custom"),selected="basic",
+                  choices = c("basic","bicolour","greyscale","divergent","custom"),selected="basic",
                   direction="vertical", size = "sm", justified =T)
             )),
             column(6,
@@ -185,7 +185,7 @@ ui <- fluidPage(
                              colourpicker::colourInput("col2", "Secondary points colour", value = "red", palette = "limited"),
                              
                              hr(), # color palette input
-                             pickerInput( inputId = "col_palette", label = "Colour palette",
+                             pickerInput( inputId = "col_palette", label = "Colour scale",
                                choices = colors_pal, selected = "Paired", width = "100%",
                                choicesOpt = list(
                                  content = sprintf(
@@ -231,13 +231,11 @@ ui <- fluidPage(
                                        )), #jqui_resizabled( options = list(aspectRatio = TRUE))
         uiOutput("jqui")
         ), # tab
-        tabPanel("Read Me", br(),
-                 p("what is it?, 
-                   about presets (options tailored for each preset)
-                   options explamation,
-                   data editign,
-                   ggedit
-                   aknowlegements: people and packages")),
+        tabPanel("Read Me", 
+                  fillPage(padding = 0, title = NULL, bootstrap = F, theme = NULL,
+                  wellPanel(style = "background-color: #ffffff; overflow-y:scroll; max-height: 600px;",
+                  includeHTML("Read_me_app.html")))
+                 ),
         tabPanel("Data Editing",br(),
                  p(shiny::actionButton("applyBtn", "Apply changes"),
                  downloadButton("saveBtn", "Download data")),
@@ -539,7 +537,7 @@ output$distPlot <- renderPlot({
                          selected = input$point_shape)
        r_values$pch_ <- c(0:25)
        
-     } else if (input$style_select %in% c("bicolor", "divergent")) {
+     } else if (input$style_select %in% c("bicolour", "divergent")) {
        updateSelectInput(session, inputId = "point_shape",
                          choices = c(0:20),
                          selected = ifelse(input$point_shape<=20, input$point_shape, 16))
