@@ -29,6 +29,12 @@ library(RColorBrewer)
 
 source("Nature_Comm_bar.R")
 
+### JS 
+jsCode <- "shinyjs.zzz = function(params){
+$('.ui-resizable').css('width', 300);
+$('.ui-resizable').css('height', 300);
+}"
+
 ### here is code to make color scale picker (palette picker) UI input
 ### it is taken from shinyWidgets website: https://dreamrs.github.io/shinyWidgets/articles/palette_picker.html
 
@@ -94,6 +100,7 @@ colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, l
 # Define UI for application
 ui <- fluidPage(
   useShinyjs(), # Shinyjs
+  extendShinyjs(text = jsCode), # to be able to use custom JS
   
   # text formating for validate() messages
   tags$head(
@@ -364,8 +371,24 @@ server <- function(input, output, session) {
   
   ### /functions
   
-  # main tab panel observer hide show UI parts
+  ### JS 
+  observeEvent(input$get_seed,{
+    js$zzz() # input$params
+    ## this ugliness below is a way to refresh panel otherwise the trick does now work
+    updateTabsetPanel(session, "main_tabs", selected = "Read Me")
+    updateTabsetPanel(session, "main_tabs", selected = "Plot")
+    print(input$distPlot_size)
+    ### so the plot size does not change
+    #' this mean that to make rest of stuff work we have o tranfer ppp to reactive values
+    #' change all the ppp to reactive values list 
+    #' use in all save and display fnction the reactive value
+    #' and update it in function but then update it with this button as well
+    #' and see if it works like that with manual resizing
+    #' if this does not work make another reactive or observe to react to man:
+    #' input$distPlot_size {ppp <- input$distPlot_size}
+  })
   
+  # main tab panel observer hide show UI parts
   observeEvent({
     #input$conditionedPanels # no longer necessary
     input$main_tabs},
