@@ -26,9 +26,15 @@ library(scales) # for oob to work
 #' 
 
 preprocess <- function(x, E="SD"){
-  na<- names(x)
-  
+
+  #na<- x[1,] # use forst row as names
+  na <- names(x)
   names(x) <- c("samples", na[2:length(na)]) # make sure that 1st column in named samples as we will use this name in the code
+  #x <- x[-1,] # delete first row first row
+  
+  #x[2:length(x)] <- x[2:length(x)] %>% lapply(as.numeric) # change values to numeric
+  
+  x$samples <- as.character(x$samples) # make sure that sample names are txt not numbers
   
   DS_ <- length(na) - 1 # how many data series do we have?
   
@@ -46,7 +52,6 @@ preprocess <- function(x, E="SD"){
   data_g1$samples <- factor(x$samples, levels = unique(x$samples)) # maintain order of data series as in input file on the plot
   
   out_ <- list(df=data_g1, series_No=DS_)
-  
   return(out_)
 }
 

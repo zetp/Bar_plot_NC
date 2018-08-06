@@ -10,7 +10,7 @@ library(shiny)
 library(shinyWidgets)
 
 library(shinyjqui) # resizable plot
-library(ggedit) # editing of plot
+#library(ggedit) # editing of plot
 library(rhandsontable) # editing of data
 library(shinysky) # busy spinner with delay timer
 library(shinyjs) # to reset fileInput
@@ -77,19 +77,11 @@ head(background_pals, 3)
 colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, length))
 
 ### end of pallete picker code
-
-#'  TO DO:
-#'  
-#'  === test all functions
-#'  
-#'  make READ ME txt
-#'
+#'  NOTES:
 #'  Keep in mind: flowLayout (Lays out elements in a left-to-right, top-to-bottom arrangement )
 #'  verticalLayout - vertical placement
 #'  splitLayout - horizontal placemnt
-#'  
 #'  Shiny Cavas for resize - alternative to shinyjqui??? https://github.com/metrumresearchgroup/shinyCanvas
-
 
 # Define UI for application
 ui <- fluidPage(
@@ -233,13 +225,16 @@ ui <- fluidPage(
         ), # tab
         tabPanel("Read Me", 
                   fillPage(padding = 0, title = NULL, bootstrap = F, theme = NULL,
-                  wellPanel(style = "background-color: #ffffff; overflow-y:scroll; max-height: 600px;",
+                  wellPanel(style = "background-color: #ffffff; overflow-y:scroll; max-height: 750px;",
                   includeHTML("Read_me_app.html")))
                  ),
         tabPanel("Data Editing",br(),
                  p(shiny::actionButton("applyBtn", "Apply changes"),
                  downloadButton("saveBtn", "Download data")),
-                 rHandsontableOutput("RH")
+                 fillPage(padding = 0, title = NULL, bootstrap = F, theme = NULL,
+                          wellPanel(style = "background-color: #ffffff; overflow-y:scroll; max-height: 750px;",
+                                    rHandsontableOutput("RH")))
+                 
                  )
         # ## ======== remove comment from here to enble ggEdit panel
         # ,
@@ -285,14 +280,19 @@ server <- function(input, output, session) {
   
   ### functions
   load_sample_data <- function(){
-    r_values$data_g1 <- fread("Sample_data.txt",data.table=F, check.names=T) 
+    r_values$data_g1 <- read.table("Sample_data.txt", check.names=T, sep="", fill = T,
+                                   header = T, stringsAsFactors = F,row.names = NULL)
+      #fread("Sample_data.txt",data.table=F, check.names=T) 
   }
   
   load_user_data <- function() {
     sep_ <- ifelse(input$dot_comma==T,".",",")
     data_file <- input$data_g
     tryCatch({
-      r_values$data_g1 <- fread(data_file$datapath, data.table=F, dec = sep_, check.names=T)
+      r_values$data_g1 <- read.table(data_file$datapath, 
+                                     check.names=T, sep="", fill = T, 
+                                     dec= sep_, header = T, stringsAsFactors = F, row.names = NULL)
+        #fread(data_file$datapath, data.table=F, dec = sep_, check.names=T)
     },
     warning=function(w){
       #alert

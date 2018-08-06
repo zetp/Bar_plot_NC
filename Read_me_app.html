@@ -18,11 +18,18 @@ table.tabliczka th, td {padding: 3px;}
 <h2>PointBar Read Me</h2>
 
 <p>This app will make bar plot with indicated measurements points. 
-It requires data to be in following format:</p>
+It requires data to be in following format:<br>
+<ul>
+<li>fields are separated by white space characters (that is one or more spaces, tabs, newlines or carriage returns)</li>
+<li>first row consists of column names</li>
+<li>first column consists of sample names (repeated names indicate multiple measurements for given sample)</li>
+<li>row or column names cannot include whitesapce charatcers (space, tab etc)</li>
+</ul> sample data is shown below:
+</p>
 
 <div class="container">
 <table class="tabliczka">
-<thead><tr><th title="Field #1"></th>
+<thead><tr><th title="Field #1">samples</th>
 <th title="Field #2">cond1</th>
 <th title="Field #3">cond2</th>
 <th title="Field #4">cond3</th>
@@ -95,16 +102,16 @@ It requires data to be in following format:</p>
 </div>
 
 <p>
-Samples are represented as row names and identical row names mark single measurements. In the case of data presented above there are three measurements for each sample. Column names indicate conditions (for example various concentrations). You can take closer look at the data in <b>Data Editing</b> tab. Moreover you can edit the data in this tab (including copy-paste, undo-redo, contextual menu etc.) with some limitations. You can also download the data.
+Samples are represented as row names and identical row names mark multiple measurements for given sample. In the case of data presented above there are three measurements for each sample. Column names indicate conditions (for example various concentrations). You can take closer look at the data in <b>Data Editing</b> tab. Moreover you can edit the data in this tab with some limitations. For changes to make effect you have to click "Apply changes" button. You can also download the data (with "Dowload data" button).
 </p>
 
 <h3>Plot tab</h3>
-<p>This tab is where plot is shown. The plot can be resized by dragging bottom-right corner or edges (bottom or right) of the plot. Size of the plot is displayed below the plot. When this tab is active plot customization options will become available in the sidebar.</p>
+<p>This tab is where plot is shown. The plot can be resized by dragging bottom-right corner or edges (bottom or right) of the plot. Size of the plot is displayed below the plot. When this tab is active plot customisation options will become available in the sidebar.</p>
 
 <h3>Sidebar</h3>
 <p>Sidebar provides various options for plot customisation depending on selected sidebar tab.
 However the file selector will always be displayed so you know on which file you are working on.
-The file selector allows upload of files with data to be plotted (in csv or txt). Next to it there is a switch to set decimal separator (dot or comma).</p>
+The file selector allows upload of files with data to be plotted. Next to it there is a switch to set decimal separator (dot or comma).</p>
 
 <h4>Sidebar: Main tab</h4>
 In this tab you can select plot style. There are 5 styles to choose from:<br>
@@ -114,7 +121,7 @@ In this tab you can select plot style. There are 5 styles to choose from:<br>
 <li><b>Bicolour</b>
 - data points below and above average are coloured differently</li>
 <li><b>Greyscale</b>
-- this produces in grayscale image. Use this preset to avoid colour use</li>
+- this produces in grayscale image, use this preset to avoid colour use</li>
 <li><b>Divergent</b>
 - data points are coloured differently for each condition</li>
 <li><b>Custom</b>
@@ -128,7 +135,7 @@ In Main tab you can also:
 </ul>
 
 <h4>Sidebar: Points tab</h4>
-In this tab you can rearrange data points on the plot using appropriate button. The arrangement of data points has random component,  constant random seed value ensures reproducible point positions on the plot. Shape of points also can be chosen. N.B. the points selection is tailored to current selected style.
+In this tab you can rearrange data points on the plot using appropriate button. The vertical positions of data points depends on their value. Horizontal position of data points is random within bar width so that points with similar values would not overlap one another. Constant random seed value ensures reproducible point positions on the plot. Shape of points also can be chosen. N.B. the points selection is tailored to current selected style.
 
 <h4>Sidebar: Colour tab</h4>
 Here you can choose colour(s) for the points and also colour scale for divergent and custom styles. The colour scale can be reversed using checkbox. You will also be informed if particular colour scale is colour blind friendly.
