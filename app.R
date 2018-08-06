@@ -275,7 +275,8 @@ server <- function(input, output, session) {
                     (that is one or more spaces, tabs, newlines or carriage returns)</li>
                     <li>first row consists of column names</li>
                     <li>first column consists of sample names (repeated names indicate multiple measurements for given sample)</li>
-                    <li>row or column names do not include whitesapce charatcers (space, tab etc.)</li></small>")
+                    <li>row or column names do not include whitesapce charatcers (space, tab etc.)</li>
+                    <li>decimal separator is setup correctly</li></small>")
   
   ### TO DO: consider for some values session$userData$flag <- value instead of reactive
   # initiate reactive values
