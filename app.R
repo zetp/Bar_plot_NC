@@ -269,6 +269,13 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
+  ### error message
+  e_message <- HTML("<small align=left><br>Please make sure that:<ul>
+                                                    <li>fields are separated by white space characters
+                    (that is one or more spaces, tabs, newlines or carriage returns)</li>
+                    <li>first row consists of column names</li>
+                    <li>first column consists of sample names (repeated names indicate multiple measurements for given sample)</li>
+                    <li>row or column names do not include whitesapce charatcers (space, tab etc.)</li></small>")
   
   ### TO DO: consider for some values session$userData$flag <- value instead of reactive
   # initiate reactive values
@@ -298,7 +305,7 @@ server <- function(input, output, session) {
       #alert
       sendSweetAlert(session = session,
                      title = "Error",
-                     text = tags$span("Error occured while opening file."),
+                     text = tags$span("Error occured while opening file.", e_message),
                      type = "error",
                      closeOnClickOutside = F)
       #action
@@ -309,7 +316,7 @@ server <- function(input, output, session) {
       #alert
       sendSweetAlert(session = session,
                      title = "Error",
-                     text = tags$span("Error occured while opening file."),
+                     text = tags$span("Error occured while opening file.", e_message),
                      type = "error",
                      closeOnClickOutside = F)
       #action
@@ -323,7 +330,8 @@ server <- function(input, output, session) {
     # show alert
     sendSweetAlert(session = session,
                    title = "Error",
-                   text = tags$span("Error occured while loading data",tags$br(),"Re-loading dataset"), #re-loading dataset
+                   text = tags$span("Error occured while loading data",
+                                    tags$br(),"Re-loading dataset", e_message), #re-loading dataset
                    type = "error",
                    html=T,
                    closeOnClickOutside = F)
@@ -494,7 +502,8 @@ output$distPlot <- renderPlot({
     # show alert
     sendSweetAlert(session = session,
                    title = "Error",
-                   text = tags$span("Error occured while rendering plot",tags$br(),"Re-loading sample dataset"), #re-loading dataset
+                   text = tags$span("Error occured while rendering plot",tags$br(),"Re-loading sample dataset",
+                                    tags$br(), e_message), #re-loading dataset
                    type = "error",
                    html=T,
                    closeOnClickOutside = F)
