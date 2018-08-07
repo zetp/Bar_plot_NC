@@ -230,7 +230,8 @@ ui <- fluidPage(
                  ),
         tabPanel("Data Editing",br(),
                  p(shiny::actionButton("applyBtn", "Apply changes"),
-                 downloadButton("saveBtn", "Download data")),
+                 downloadButton("saveBtn", "Download data"),
+                 shiny::actionButton("resetBtn", "Reset")),
                  fillPage(padding = 0, title = NULL, bootstrap = F, theme = NULL,
                           wellPanel(style = "background-color: #ffffff; overflow-y:scroll; max-height: 750px;",
                                     rHandsontableOutput("RH")))
@@ -595,6 +596,15 @@ output$distPlot <- renderPlot({
   ### Data Edit - attempt to apply changes
   observeEvent(input$applyBtn, {
     r_values$data_g1 <- hot_to_r(input$RH)
+  })
+  
+  ### Data Edit - attempt to apply changes
+  observeEvent(input$resetBtn, {
+    if (is.null(input$data_g)){
+      load_sample_data() # if no file provided then load Sample data
+    } else {
+      load_user_data() # if file provided load user data
+    }
   })
 
   ### Attempt to save plot
