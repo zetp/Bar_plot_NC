@@ -177,7 +177,7 @@ ui <- fluidPage(
                              colourpicker::colourInput("col2", "Secondary points colour", value = "red", palette = "limited"),
                              
                              hr(), # color palette input
-                             pickerInput( inputId = "col_palette", label = "Colour scale",
+                             pickerInput( inputId = "col_palette", label = HTML("Colour scale<br><span style='font-weight:normal'><small>works with divergent and custom styles</small></span>"),
                                choices = colors_pal, selected = "Paired", width = "100%",
                                choicesOpt = list(
                                  content = sprintf(
@@ -527,8 +527,12 @@ output$distPlot <- renderPlot({
   
   # check and render text if Colour blind friendly
   output$Colorblind <- renderUI({
-    HTML(paste("<p>Color blind friendly:<b>", 
-             (brewer.pal.info %>% subset(rownames(.) == input$col_palette) %>% .$colorblind), "</b></p>"))
+    if(brewer.pal.info %>% subset(rownames(.) == input$col_palette) %>% .$colorblind) {
+      txt_ <- "Yes"
+    } else {
+      txt_ <- "No"
+    }
+    HTML(paste("<p>Is colour scale colour blind frienndly?<b>", txt_, "</b></p>"))
   })
   
   # Set random seed code
