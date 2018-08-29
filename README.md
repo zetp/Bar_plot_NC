@@ -4,21 +4,8 @@ Aim: make Shiny app to allow for easy creation of bar plots that fulfil requirem
 Using R and Shiny - seems to be nice project for my first shiny app.
 
 PointBar ~~is now~~ will shortly be available [here](http://adz.ibb.waw.pl/pointbar/).
-The detailed ReadMe is included in the application itself.
 
 <html>
-
-<head>
-<meta charset="utf-8">
-<style>
-table.tabliczka tr:hover {background-color: #f5f5f5;}
-table.tabliczka tr[title] {font-weight: bold;}
-table.tabliczka td[class] {font-weight: bold;}
-table.tabliczka table {border-collapse: collapse;}
-table.tabliczka table, th, td { border-bottom: 1px solid #AAA; #border: 1px solid black;}
-table.tabliczka th, td {padding: 3px;}
-</style>
-</head>
 
 <body>
 <div bgcolor="white">
