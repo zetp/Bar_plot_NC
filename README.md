@@ -3,5 +3,5 @@ Aim: make Shiny app to allow for easy creation of bar plots that fulfil requirem
 "Please ensure that the corresponding dot plots are overlaid in the bar charts"
 Using R and Shiny - seems to be nice project for my first shiny app.
 
-PointBar is now available [here](http://adz.ibb.waw.pl/pointbar/).
+PointBar ~~is now~~ will shortly be available [here](http://adz.ibb.waw.pl/pointbar/).
 The detailed ReadMe is included in the application itself.
