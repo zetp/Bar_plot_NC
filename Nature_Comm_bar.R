@@ -141,10 +141,9 @@ axis_limits <- function(x, p = 5){
 #' @param ps points shape (number 1-25). N.B. it is not applicable to greyscale style ("gs")
 #' @param xy_ts axis text size
 #' @param xy_ls axis label size
-#' @param col_scale - color scale for bars h_lines = F,
+#' @param col_scale - color scale for bars,
 #' @param Error - type of error to be calculated ("SD" or "SEM")
-#' @param h_lines - draw horizontal lines in plot backgroud
-#'   
+#' @param h_lines - draw horizontal lines in plot backgroud #'   
 #' @return ggplot2 object
 #' @export 
 #'
