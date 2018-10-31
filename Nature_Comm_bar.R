@@ -150,230 +150,251 @@ axis_limits <- function(x, p = 5){
 #' @examples iris %>% dplyr::select(Species, everything()) %>% bar_plt_points(style = "div", width = 0.7, col = "red", seed = 15,  ps =18)
 
 bar_plt_points <- function(x, # the data frame
-           style = "basic",
-           width = 0.8,
-           point_size = 2.5,
-           a = 1,
-           col = rgb(0, 0, 1),
-           col2 = rgb(1, 0, 0),
-           seed = 42,
-           y_limits,
-           y_div,
-           y_l,
-           x_l,
-           xy_ts,
-           xy_ls,
-           col_scale = NULL,
-           Error = "SD",
-           h_lines = F,
-           ps = 19) {
-    # preprocessing data
-    
-    out_ <- preprocess(x, E=Error)
+                           style = "basic",
+                           width = 0.8,
+                           point_size = 2.5,
+                           a = 1,
+                           col = rgb(0, 0, 1),
+                           col2 = rgb(1, 0, 0),
+                           seed = 42,
+                           y_limits,
+                           y_div,
+                           y_l,
+                           x_l,
+                           xy_ts,
+                           xy_ls,
+                           col_scale = NULL,
+                           Error = "SD",
+                           h_lines = F,
+                           ps = 19) {
+  # preprocessing data
   
-    data_g1 <-  out_$df
+  out_ <- preprocess(x, E=Error)
+  
+  data_g1 <-  out_$df
+  
+  DS_ <- out_$series_No
+  
+  ### calculate min_ even if y_limits are provided - as it is needed below
+  lims_ <- axis_limits(data_g1)
+  min_ <- lims_$min
+  
+  # if limints of y axis are not provided then estimate them
+  if(missing(y_limits)){
     
-    DS_ <- out_$series_No
+    y_limits <- lims_$limits
     
-    ### calculate min_ even if y_limits are provided - as it is needed below
-    lims_ <- axis_limits(data_g1)
-    min_ <- lims_$min
-    
-    # if limints of y axis are not provided then estimate them
-    if(missing(y_limits)){
-      
-      y_limits <- lims_$limits
-      
-    } else if (any((length(y_limits) != 2),(class(y_limits) != "numeric"))){ # check if limits have two items that are numbers
-      warning("y_limints should consists of two numeric values, for exapmple c(0,100)")
-    }
-
-    # if division missing estimate it esle use provided y_div
-    if(missing(y_div)){
-      pre_ <- pretty(y_limits, n = 10)
-    } else {
-      pre_ <- seq(y_limits[1], y_limits[2], by = y_div) # else use suer provided values 
-    }
-    
-    ### if no color scale use default
-    if(is.null(col_scale)){
-      col_scale <- rev(brewer.pal(DS_, "Dark2"))
-    }
-    
-    #### Set Divergent color values if color scale is provided
-    # default color scale
-    col_scale3 <- list(scale_colour_manual(values = rev(adjustcolor(brewer.pal(DS_, "Dark2"), alpha.f = a))))
-    # if scale provided change the variable
-    if (!missing(col_scale)&style == "divergent") {
-        col_scale3 <- list(scale_colour_manual(values= adjustcolor(col_scale,alpha.f = a)))
-        }
+  } else if (any((length(y_limits) != 2),(class(y_limits) != "numeric"))){ # check if limits have two items that are numbers
+    warning("y_limints should consists of two numeric values, for exapmple c(0,100)")
+  }
+  
+  # if division missing estimate it esle use provided y_div
+  if(missing(y_div)){
+    pre_ <- pretty(y_limits, n = 10)
+  } else {
+    pre_ <- seq(y_limits[1], y_limits[2], by = y_div) # else use suer provided values 
+  }
+  
+  ### if no color scale use default
+  if(is.null(col_scale)){
+    col_scale <- rev(brewer.pal(DS_, "Dark2"))
+  }
+  
+  #### Set Divergent color values if color scale is provided
+  # default color scale
+  col_scale3 <- list(scale_colour_manual(values = rev(adjustcolor(brewer.pal(DS_, "Dark2"), alpha.f = a))))
+  # if scale provided change the variable
+  if (!missing(col_scale)&style == "divergent") {
+    col_scale3 <- list(scale_colour_manual(values= adjustcolor(col_scale,alpha.f = a)))
+  }
+  if (length(col_scale) < DS_) {
+    col_scale3 <- list(scale_colour_manual(values= adjustcolor((colorRampPalette(col_scale)(DS_)),alpha.f = a))) # expand color scale if necessary
+  } 
+  
+  ### ==== POINTS Styles definitions====
+  # modes: basic, divergent, greyscale and bicolour
+  
+  ## basic version single color - DEFAULT mode
+  S_basic <- list(geom_jitter(
+    aes(y = value, color = variable),
+    stroke = point_size / 2.5,
+    position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
+    shape = ps,
+    size = point_size,
+    fill = adjustcolor(col2, alpha.f = a)),
+    scale_colour_manual(values = rep(adjustcolor(col, alpha.f = a), DS_))
+  )
+  ## divergent dot colors
+  S_div <- list(geom_jitter(
+    aes(y = value, color = variable),
+    stroke = point_size / 2.5,
+    position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
+    shape = ps,
+    size = point_size,
+    fill = adjustcolor(col2, alpha.f = a)
+  ), col_scale3 #scale_colour_manual(values = rev(adjustcolor(brewer.pal(DS_, "Dark2"), alpha.f = a)))
+  )
+  
+  ## grayscale version
+  S_gs <- list(geom_jitter(
+    aes(y = value,color = variable),
+    stroke = point_size / 2.5, # storke controls outline thickness
+    position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
+    shape = ps,
+    size = point_size,
+    fill = grey(1, alpha = a)
+  ), scale_colour_manual(values = rep(grey(0, alpha = a), DS_)) # add as many as No of data series
+  )
+  
+  ## bicolour different colors below above average value for each series
+  S_ab <- list(geom_jitter(
+    aes(y = value,
+        group =  variable,
+        color = ifelse((value <= 0), (value > mean_), (value < mean_)) # above mean - col, below or equal - col2
+        # the ifelse is for the negative values cases
+    ),
+    position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
+    shape = ps,
+    size = point_size
+  ), scale_colour_manual(values = c(adjustcolor(col, alpha.f = a), adjustcolor(col2, alpha.f = a)))
+  )
+  
+  ## Custom change color of bars and points
+  S_cust <- list(geom_jitter(
+    aes(y = value, color = variable),
+    position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
+    shape = ps, # ps,
+    size = point_size,
+    stroke = point_size / 2.5,
+    fill = adjustcolor(col2, alpha.f = a)),
+    scale_colour_manual(values = rep(adjustcolor(col, alpha.f = a), DS_))
+  )
+  
+  ### ====/ POINTS Styles definitions====
+  ### === POINTS switch ===
+  Style_ <- switch(
+    style,
+    "divergent" = S_div,
+    "greyscale" = S_gs,
+    "bicolour" = S_ab,
+    "custom" = S_cust,
+    S_basic # default mode
+  )  
+  
+  ### START PLOT
+  # color scale for bars with exception for custom mode
+  # if there is no color sclae provided or Style is not custom provide default color scale
+  if(!missing(col_scale)&style == "custom") {
+    col_scale2 <- scale_fill_manual(values = col_scale); #example brewer.pal(4, "Blues")) 
     if (length(col_scale) < DS_) {
-        col_scale3 <- list(scale_colour_manual(values= adjustcolor((colorRampPalette(col_scale)(DS_)),alpha.f = a))) # expand color scale if necessary
-        } 
-
-    ### ==== POINTS Styles definitions====
-    # modes: basic, divergent, greyscale and bicolour
-    
-      ## basic version single color - DEFAULT mode
-      S_basic <- list(geom_jitter(
-       aes(y = value, color = variable),
-       stroke = point_size / 2.5,
-       position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
-       shape = ps,
-       size = point_size,
-       fill = adjustcolor(col2, alpha.f = a)),
-       scale_colour_manual(values = rep(adjustcolor(col, alpha.f = a), DS_))
-     )
-      ## divergent dot colors
-      S_div <- list(geom_jitter(
-        aes(y = value, color = variable),
-        stroke = point_size / 2.5,
-        position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
-        shape = ps,
-        size = point_size,
-        fill = adjustcolor(col2, alpha.f = a)
-      ), col_scale3 #scale_colour_manual(values = rev(adjustcolor(brewer.pal(DS_, "Dark2"), alpha.f = a)))
-      )
-
-      ## grayscale version
-      S_gs <- list(geom_jitter(
-        aes(y = value,color = variable),
-        stroke = point_size / 2.5, # storke controls outline thickness
-        position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
-        shape = ps,
-        size = point_size,
-        fill = grey(1, alpha = a)
-      ), scale_colour_manual(values = rep(grey(0, alpha = a), DS_)) # add as many as No of data series
-      )
-
-      ## bicolour different colors below above average value for each series
-      S_ab <- list(geom_jitter(
-        aes(y = value,
-            group =  variable,
-          color = ifelse((value <= 0), (value > mean_), (value < mean_)) # above mean - col, below or equal - col2
-          # the ifelse is for the negative values cases
-        ),
-        position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
-        shape = ps,
-        size = point_size
-      ), scale_colour_manual(values = c(adjustcolor(col, alpha.f = a), adjustcolor(col2, alpha.f = a)))
-      )
-      
-      ## Custom change color of bars and points
-      S_cust <- list(geom_jitter(
-        aes(y = value, color = variable),
-        position = position_jitterdodge(dodge.width = width, jitter.width = width/2),
-        shape = ps, # ps,
-        size = point_size,
-        stroke = point_size / 2.5,
-        fill = adjustcolor(col2, alpha.f = a)),
-        scale_colour_manual(values = rep(adjustcolor(col, alpha.f = a), DS_))
-        )
-      
-    ### ====/ POINTS Styles definitions====
-    ### === POINTS switch ===
-    Style_ <- switch(
-      style,
-      "divergent" = S_div,
-      "greyscale" = S_gs,
-      "bicolour" = S_ab,
-      "custom" = S_cust,
-      S_basic # default mode
-      )  
-    
-    ### START PLOT
-      # color scale for bars with exception for custom mode
-      # if there is no color sclae provided or Style is not custom provide default color scale
-      if(!missing(col_scale)&style == "custom") {
-        col_scale2 <- scale_fill_manual(values = col_scale); #example brewer.pal(4, "Blues")) 
-        if (length(col_scale) < DS_) {
-          col_scale2 <- scale_fill_manual(values=colorRampPalette(col_scale)(DS_))} # expand color scale if necessary
-      } else {
-        col_scale2 <- scale_fill_grey(start = 1 - 1 / DS_, end = 0) # kolory
-      }
-      
-      # main plot
-      p_ <-
-        ggplot(data_g1, aes(
-          x = samples,
-          y = mean_,
-          fill = variable
-          )) + geom_bar(position = position_dodge(),  # this adds border arond bars colour="black", size = 1, # size 
-                      width = width,
-                      stat = "identity") + col_scale2
-      
-      # error bars
-      p_ <- p_ + geom_errorbar(
-        aes(
-          ymin = mean_ - err_,
-          ymax = mean_ + err_
-        ),
-        position = position_dodge(width = width),
-        width = width / 2.5
-      )
-      
-      # add line on zero y if values are negative
-      if (min_ < 0) {
-        Style_ <- append(Style_, geom_hline(yintercept = 0, linetype = "dashed", size = 1/2)) 
-      }
-      
-      # applying points to the plot
-      p_ <- p_ + Style_
-
-    ### formatting the plot
-    p_ <-
-      p_ + theme_classic() + theme(
-        axis.line = element_line(colour = "black", size = 1),
-        axis.ticks = element_line(colour = "black", size = 1)
-      )
-    # transparent backgroud
-    p_ <- p_ + theme(legend.position="none", # removing legend as they are done when combining the image
-      panel.background = element_rect(fill = "transparent", colour = NA),
-      plot.background = element_rect(fill = "transparent", colour = NA)
+      col_scale2 <- scale_fill_manual(values=colorRampPalette(col_scale)(DS_))} # expand color scale if necessary
+  } else {
+    col_scale2 <- scale_fill_grey(start = 1 - 1 / DS_, end = 0) # kolory
+  }
+  
+  # main plot
+  p_ <-
+    ggplot(data_g1, aes(
+      x = samples,
+      y = mean_,
+      fill = variable
+    )) + geom_bar(position = position_dodge(),  # this adds border arond bars colour="black", size = 1, # size 
+                  width = width,
+                  stat = "identity") + col_scale2
+  
+  # add line on zero y if values are negative
+  if (min_ < 0) {
+    Style_ <- append(Style_, geom_hline(yintercept = 0, linetype = "dashed", size = 1/2)) 
+  }
+  
+  # applying points to the plot
+  p_ <- p_ + Style_
+  
+  ### formatting the plot
+  p_ <-
+    p_ + theme_classic() + theme(
+      axis.line = element_line(colour = "black", size = 1),
+      axis.ticks = element_line(colour = "black", size = 1)
     )
-    
-    # change axis text size if value is set
-    if(!missing(xy_ts)){
-    p_ <- p_ + theme(axis.text=element_text(size=xy_ts))
-    }
-    
-    # change axis label size if value is set
-    if(!missing(xy_ls)){
-      p_ <- p_ + theme(axis.title=element_text(size=xy_ls))
-    }
-    
-    # adjustment so that bars were not hovering above axis
-    p_ <- p_ + scale_y_continuous(expand = c(0, 0),
-                                  oob=rescale_none,
-                                  limits = c(y_limits),
-                                  breaks = pre_)
-    #' if we set up the min value to positive number then the bars on plot disappears
-    #' this is why we need oob=rescale_none added above
-    
-    # add horizontal lines
-    if (h_lines){
-      p_ <- p_ + theme(panel.grid.minor = element_line(colour = "grey", linetype = 3, size = 1))
-    }
-    
-    ## add labels if they exist
-    # for y
-    if(!missing(y_l)){
-      p_ <- p_ + ylab(y_l)
-    }
-    
-    # for x
-    if(!missing(x_l)){
-      p_ <- p_ + xlab(x_l)
-    }
-    
-    # execution
-    if (class(seed) == "numeric") {
-      # set seed for  and plot
-      set.seed(seed)
-      return(p_)
-    } else # if seed is not good just render plot
-      return(p_)
-    
+  # transparent backgroud
+  p_ <- p_ + theme(legend.position="none", # removing legend as they are done when combining the image
+                   panel.background = element_rect(fill = "transparent", colour = NA),
+                   plot.background = element_rect(fill = "transparent", colour = NA)
+  )
+  
+  # adjustment so that bars were not hovering above axis
+  p_ <- p_ + scale_y_continuous(expand = c(0, 0),
+                                oob=rescale_none,
+                                limits = c(y_limits),
+                                breaks = pre_)
+  #' if we set up the min value to positive number then the bars on plot disappears
+  #' this is why we need oob=rescale_none added above
+  
+  # execution
+  if (class(seed) == "numeric") {
+    # set seed for and plot
+    set.seed(seed)
+    return(p_)
+  } else # if seed is not good just render plot
+    return(p_)
+  
+}
+
+
+
+
+#ERROR BAR: OK
+#' width
+add_error_bars <- function(plot_, width = 0.8){
+  # error bars
+  plot_ <- plot_ + geom_errorbar(
+    aes(
+      ymin = mean_ - err_,
+      ymax = mean_ + err_
+    ),
+    position = position_dodge(width = width),
+    width = width / 2.5
+  )
+  return(plot_)
+}
+
+
+### FUNCTION: AXIS AND LABEL and their size ###
+#' xy_ts
+#' xy_ls
+#' y_l
+#' x_l
+#' 
+manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls){
+  # change axis TEXT size if value is set
+  if(!missing(xy_ts)){
+    plot_ <- plot_ + theme(axis.text=element_text(size=xy_ts))
+  }
+  # change axis LABEL size if value is set
+  if(!missing(xy_ls)){
+    plot_ <- plot_ + theme(axis.title=element_text(size=xy_ls))
+  }
+  ## add labels if they exist
+  # for y
+  if(!missing(y_l)){
+    plot_ <- plot_ + ylab(y_l)
+  }
+  # for x
+  if(!missing(x_l)){
+    plot_ <- plot_ + xlab(x_l)
+  }
+  return(plot_)
+}
+
+### FUNCTION: Horizontal lines ###
+#' h_lines
+#' 
+add_h_lines <- function(plot_, h_lines){
+  # add horizontal lines
+  if (h_lines){
+    plot_ <- plot_ + theme(panel.grid.minor = element_line(colour = "grey", linetype = 3, size = 1))
+  }
+  return(plot_)
 }
 
 
