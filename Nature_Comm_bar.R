@@ -398,7 +398,20 @@ add_h_lines <- function(plot_, h_lines){
 }
 
 
-# this is modiifed pchShow() function mainly to draw pch point in two rows - more siutable for sidebar of Shiny app
+#' this is modified pchShow() function mainly to draw pch point in two rows
+#' more siutable for sidebar of Shiny app
+#' @param ipch - points to be plotted for example: c(0:25)
+#' @param cex - size of points
+#' @param col - colour of the points (outline)
+#' @param bg - colour of the points background
+#' @param coltext - colour of the text
+#' @param cextext - size of the text
+#' @param lwd - points outline thickness
+#'
+#' @return 
+#' @export
+#'
+#' @examples
 point_plt <- function(ipch=c(0:25), cex = 3, col = "red3", bg = "gold", coltext = "brown", cextext = 1.2, lwd = 1)
 {
   np <- length(ipch)
@@ -416,3 +429,32 @@ point_plt <- function(ipch=c(0:25), cex = 3, col = "red3", bg = "gold", coltext 
       text(ix[i] - 0.3, iy[i], pc, col = coltext, cex = cextext)
   }
 }
+
+
+#'
+### EXTRA Functions
+## TO DO:
+#' make sure all functions work
+#' remove unused variables from main plotting function
+#' apply to the shiny app makes sure it all works
+#' tests: /Users/zp221/Desktop/ADZ/Shiny_R/example_files
+#' if applicable add more error handling
+#' deploy into github
+#' make warning if device is mobile as it does not work
+#'    https://g3rv4.com/2017/08/shiny-detect-mobile-browsers
+#'    
+#' add new functionalities to functions
+#'
+
+setwd("~/GitHub/Bar_plot_NC/")
+dat <- read.table("Sample_data.txt", check.names=T, sep="", fill = T,
+                  header = T, stringsAsFactors = F)
+
+p_ <- bar_plt_points(dat)
+p_
+p_ <- add_error_bars(p_)
+p_
+p_ <- manipulate_axis(p_, y_l="ale label", x_l="o matko!", xy_ts=16, xy_ls=18)
+p_
+p_ <- add_h_lines(p_, h_lines = T)
+p_
