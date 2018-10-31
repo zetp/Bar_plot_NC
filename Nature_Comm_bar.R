@@ -136,19 +136,14 @@ axis_limits <- function(x, p = 5){
 #'   not defined this function will attempt to estimate best limits automatically
 #' @param y_div spacing between Y axis ticks, should be single number, if not
 #'   defined this function will attempt to estimate spacing to achieve ~10 ticks automatically
-#' @param y_l text for Y axis label
-#' @param x_l text for X axis label
 #' @param ps points shape (number 1-25). N.B. it is not applicable to greyscale style ("gs")
-#' @param xy_ts axis text size
-#' @param xy_ls axis label size
 #' @param col_scale - color scale for bars,
 #' @param Error - type of error to be calculated ("SD" or "SEM")
-#' @param h_lines - draw horizontal lines in plot backgroud #'   
+#'
 #' @return ggplot2 object
 #' @export 
 #'
 #' @examples iris %>% dplyr::select(Species, everything()) %>% bar_plt_points(style = "div", width = 0.7, col = "red", seed = 15,  ps =18)
-
 bar_plt_points <- function(x, # the data frame
                            style = "basic",
                            width = 0.8,
@@ -159,13 +154,8 @@ bar_plt_points <- function(x, # the data frame
                            seed = 42,
                            y_limits,
                            y_div,
-                           y_l,
-                           x_l,
-                           xy_ts,
-                           xy_ls,
                            col_scale = NULL,
                            Error = "SD",
-                           h_lines = F,
                            ps = 19) {
   # preprocessing data
   
@@ -341,10 +331,10 @@ bar_plt_points <- function(x, # the data frame
 }
 
 
-
-
-#ERROR BAR: OK
-#' width
+#' function to add error bars to the bar plot
+#' 
+#' @param plot_ - ggplot2 plot object
+#' @param width - width of bars (see bar_plt_points function) which also detemines width of error bars (as fraction, default 0.8)
 add_error_bars <- function(plot_, width = 0.8){
   # error bars
   plot_ <- plot_ + geom_errorbar(
@@ -358,13 +348,15 @@ add_error_bars <- function(plot_, width = 0.8){
   return(plot_)
 }
 
-
-### FUNCTION: AXIS AND LABEL and their size ###
-#' xy_ts
-#' xy_ls
-#' y_l
-#' x_l
-#' 
+#' this function allows for manipulation of axes
+#' it can resize axes text and labels
+#' and set up coustom labels for x and y axes
+#'
+#' @param plot_ - ggplot2 plot object
+#' @param y_l - custom label for y axis
+#' @param x_l - custom label for x axis
+#' @param xy_ts - axis text size
+#' @param xy_ls - axis label size
 manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls){
   # change axis TEXT size if value is set
   if(!missing(xy_ts)){
@@ -386,17 +378,16 @@ manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls){
   return(plot_)
 }
 
-### FUNCTION: Horizontal lines ###
-#' h_lines
-#' 
-add_h_lines <- function(plot_, h_lines){
+#' this function adds horizontal lines to the bacground of the plot
+#' @param plot_ - ggplot2 plot object
+#' @param h_lines - boolean to show or hide horizontal lines
+add_h_lines <- function(plot_, h_lines=F){
   # add horizontal lines
   if (h_lines){
     plot_ <- plot_ + theme(panel.grid.minor = element_line(colour = "grey", linetype = 3, size = 1))
   }
   return(plot_)
 }
-
 
 #' this is modified pchShow() function mainly to draw pch point in two rows
 #' more siutable for sidebar of Shiny app
@@ -429,6 +420,7 @@ point_plt <- function(ipch=c(0:25), cex = 3, col = "red3", bg = "gold", coltext 
       text(ix[i] - 0.3, iy[i], pc, col = coltext, cex = cextext)
   }
 }
+
 
 
 #'
