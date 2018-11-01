@@ -479,27 +479,33 @@ output$distPlot <- renderPlot({
   set.seed(input$seed_) # we have to set up seed here otherwise it will change when changing slider or other input
   # export plot to variable (for saving it in the downloadHandler below)
   tryCatch({
-  r_values$plot_out <- bar_plt_points(
-    r_values$data_g1,
-    style = input$style_select,
-    width = input$width_slider,
-    a = input$alpha_slider,
-    point_size = input$size_slider,
-    seed = input$seed_,
-    y_l = input$y_label,
-    x_l = input$x_label,
-    xy_ts = input$axis_text_size,
-    xy_ls = input$axis_label_size,
-    y_limits = limity_,
-    y_div = spacing_,
-    col = input$col,
-    col2 = input$col2,
-    Error = input$err_select,
-    h_lines = input$h_lines,
-    # commented line uses rep to make input of ifelse equal to the desired output.
-    col_scale = col_scale, #ifelse(rep(input$reverse, DS_), rev(brewer.pal(DS_, input$col_palette)), brewer.pal(DS_, input$col_palette)),
-    ps = as.numeric(input$point_shape)
-  )
+    
+    temp_plot <- bar_plt_points(r_values$data_g1, # the data frame
+                                style = input$style_select,
+                                width = input$width_slider,
+                                point_size = input$size_slider,
+                                a = input$alpha_slider,
+                                col = input$col,
+                                col2 = input$col2,
+                                seed = input$seed_,
+                                y_limits = limity_,
+                                y_div = spacing_,
+                                col_scale = col_scale,
+                                Error = input$err_select,
+                                ps = as.numeric(input$point_shape))
+    
+    temp_plot <- add_error_bars(temp_plot,
+                                width = input$width_slider)
+    
+    temp_plot <- manipulate_axis(temp_plot,
+                                 y_l = input$y_label,
+                                 x_l = input$x_label,
+                                 xy_ts = input$axis_text_size,
+                                 xy_ls = input$axis_label_size)
+    
+    r_values$plot_out <- add_h_lines(temp_plot,
+                                     h_lines = input$h_lines)
+    
   }, error=function(e){
     # show alert
     sendSweetAlert(session = session,
