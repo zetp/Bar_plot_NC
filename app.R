@@ -77,14 +77,24 @@ head(background_pals, 3)
 colortext_pals <- rep(c("white", "black", "black"), times = sapply(colors_pal, length))
 
 ### end of pallete picker code
-#'  NOTES:
-#'  Keep in mind: flowLayout (Lays out elements in a left-to-right, top-to-bottom arrangement )
-#'  verticalLayout - vertical placement
-#'  splitLayout - horizontal placemnt
-#'  Shiny Cavas for resize - alternative to shinyjqui??? https://github.com/metrumresearchgroup/shinyCanvas
+
+#' Below is code for detection of client mobile devices
+#' it is slighly modified approach from https://g3rv4.com/2017/08/shiny-detect-mobile-browsers
+mobileDetect <- function(inputId, value = 0) {
+  tagList(
+    singleton(tags$head(tags$script(src = "js/mobile.js"))),
+    tags$input(id = inputId,
+               class = "mobile-element",
+               type = "hidden")
+  )
+}
 
 # Define UI for application
 ui <- fluidPage(
+  #tags$head(includeHTML(("google_analytics.html"))), # for google analytics
+  
+  mobileDetect('isMobile'), # for mobile devices detection
+  
   useShinyjs(), # Shinyjs
   
   # text formating for validate() messages
@@ -101,7 +111,6 @@ ui <- fluidPage(
   
    # Application title
   titlePanel(title = HTML(paste("<center><h4>PointBar <small> – bar plots with indicated measurement points</small></h4></center>")), windowTitle = "Point bar"),
-   
    # Sidebar with inputs 
    sidebarLayout(
       sidebarPanel(
@@ -374,8 +383,20 @@ server <- function(input, output, session) {
   
   ### /functions
   
+  # show warning when mobile device is detected
+  observeEvent(input$isMobile, {
+    if (input$isMobile){
+      sendSweetAlert(session = session,
+                     title = "Warning",
+                     text = "This app is developed for desktop computers and 
+                                 will most likely not work properly on mobile device.",
+                     type = "warning",
+                     btn_labels = "I have been warned",
+                     closeOnClickOutside = F)
+    }
+  })
+
   # main tab panel observer hide show UI parts
-  
   observeEvent({
     #input$conditionedPanels # no longer necessary
     input$main_tabs},
