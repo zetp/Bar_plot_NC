@@ -388,8 +388,7 @@ server <- function(input, output, session) {
     if (input$isMobile){
       sendSweetAlert(session = session,
                      title = "Warning",
-                     text = "This app is developed for desktop computers and 
-                                 will most likely not work properly on mobile device.",
+                     text = "This app is developed for desktop computers and will most likely not work properly on mobile device.",
                      type = "warning",
                      btn_labels = "I have been warned",
                      closeOnClickOutside = F)
