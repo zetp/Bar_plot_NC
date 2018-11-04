@@ -558,7 +558,7 @@ output$distPlot <- renderPlot({
     } else {
       txt_ <- "No"
     }
-    HTML(paste("<p>Is colour scale colour blind frienndly?<b>", txt_, "</b></p>"))
+    HTML(paste("<p>Is colour scale colour blind friendly?<b>", txt_, "</b></p>"))
   })
   
   # Set random seed code
