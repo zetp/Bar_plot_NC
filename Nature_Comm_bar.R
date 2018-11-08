@@ -357,7 +357,9 @@ add_error_bars <- function(plot_, width = 0.8){
 #' @param x_l - custom label for x axis
 #' @param xy_ts - axis text size
 #' @param xy_ls - axis label size
-manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls){
+#' @param x_a - angle for x axis text
+#' @param y_a - angle for y axis text
+manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls, x_a, y_a){
   # change axis TEXT size if value is set
   if(!missing(xy_ts)){
     plot_ <- plot_ + theme(axis.text=element_text(size=xy_ts))
@@ -375,6 +377,14 @@ manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls){
   if(!missing(x_l)){
     plot_ <- plot_ + xlab(x_l)
   }
+  # angle for x axis text
+  if(!missing(x_a)){
+    plot_ <- plot_ + theme(axis.text.x = element_text(angle = x_a, hjust = 1))
+  } 
+  # angle for y axis text
+  if(!missing(y_a)){
+    plot_ <- plot_ + theme(axis.text.y = element_text(angle = y_a, hjust = 1))
+  } 
   return(plot_)
 }
 
@@ -403,8 +413,7 @@ add_h_lines <- function(plot_, h_lines=F){
 #' @export
 #'
 #' @examples
-point_plt <- function(ipch=c(0:25), cex = 3, col = "red3", bg = "gold", coltext = "brown", cextext = 1.2, lwd = 1)
-{
+point_plt <- function(ipch=c(0:25), cex = 3, col = "red3", bg = "gold", coltext = "brown", cextext = 1.2, lwd = 1) {
   np <- length(ipch)
   k <- ifelse(length(ipch)<15, 10, np/2)
   dd <- c(-1,1)/2
@@ -417,6 +426,4 @@ point_plt <- function(ipch=c(0:25), cex = 3, col = "red3", bg = "gold", coltext 
     ## 'col' symbols with a 'bg'-colored interior (where available) :
     points(ix[i], iy[i], pch = pc, col = col, bg = bg, cex = cex, lwd = lwd)
     if(cextext > 0)
-      text(ix[i] - 0.3, iy[i], pc, col = coltext, cex = cextext)
-  }
-}
+      text(ix[i] - 0.3, iy[i], pc, col = coltext, cex = cextext)}}

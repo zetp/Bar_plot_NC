@@ -203,10 +203,17 @@ ui <- fluidPage(
         div(id="4",
             conditionalPanel(condition="input.conditionedPanels==4", # AXIS
                              HTML(paste("<h4>Axes labels</h4>")),
-                             numericInput(inputId = "axis_text_size", label = "Axis text size", min = 0, max = 1000, value = 12),
+                             fluidRow(
+                               column(6,
+                                      numericInput(inputId = "axis_text_size", label = "Axis text size", min = 0, max = 1000, value = 12),
+                                      numericInput(inputId = "x_angle", label = "X axis text angle", min = 0, max = 90, step = 5, value = 0)),
+                               column(6,
+                                      numericInput(inputId = "axis_label_size", label = "Axis label size", min = 0, max = 1000, value = 14),
+                                      numericInput(inputId = "y_angle", label = "Y axis text angle", min = 0, max = 90, step = 5, value = 0))
+                                      ), # fluid row
+                             
                              textInput(inputId = "x_label", label = "X axis label", value = "", placeholder = "Enter text to be used as axis title" ),
                              textInput(inputId = "y_label", label = "Y axis label", value = "", placeholder = "Enter text to be used as axis title" ),
-                             numericInput(inputId = "axis_label_size", label = "Axis label size", min = 0, max = 1000, value = 14),
                              HTML(paste("<h4>Y axis values</h4>")),
                              splitLayout(
                              uiOutput("inp_lim_max"),
@@ -521,7 +528,10 @@ output$distPlot <- renderPlot({
                                  y_l = input$y_label,
                                  x_l = input$x_label,
                                  xy_ts = input$axis_text_size,
-                                 xy_ls = input$axis_label_size)
+                                 xy_ls = input$axis_label_size,
+                                 x_a = input$x_angle,
+                                 y_a = input$y_angle
+                                 )
     
     r_values$plot_out <- add_h_lines(temp_plot,
                                      h_lines = input$h_lines)
