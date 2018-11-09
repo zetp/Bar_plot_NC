@@ -493,6 +493,10 @@ output$distPlot <- renderPlot({
     spacing_ <- input$Y_div
   }
   
+  #check if  axis text angle values are provided
+  validate(need(input$x_angle, label= 'X axis text angle'))
+  validate(need(input$y_angle, label= 'Y axis text angle'))
+
   #if else for reverse color scale
   col_scale <- if(input$reverse) {
     rev(brewer.pal(r_values$DS_, input$col_palette))

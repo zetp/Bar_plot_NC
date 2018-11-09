@@ -359,7 +359,7 @@ add_error_bars <- function(plot_, width = 0.8){
 #' @param xy_ls - axis label size
 #' @param x_a - angle for x axis text
 #' @param y_a - angle for y axis text
-manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls, x_a, y_a){
+manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls, x_a=0, y_a=0){
   # change axis TEXT size if value is set
   if(!missing(xy_ts)){
     plot_ <- plot_ + theme(axis.text=element_text(size=xy_ts))
@@ -378,12 +378,13 @@ manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls, x_a, y_a){
     plot_ <- plot_ + xlab(x_l)
   }
   # angle for x axis text
+  h_just_x <- ifelse(x_a < 0, 0, 1) # to correct position of ext with negative degrees
   if(!missing(x_a)){
-    plot_ <- plot_ + theme(axis.text.x = element_text(angle = x_a, hjust = 1))
+    plot_ <- plot_ + theme(axis.text.x = element_text(angle = x_a, hjust = h_just_x))
   } 
   # angle for y axis text
   if(!missing(y_a)){
-    plot_ <- plot_ + theme(axis.text.y = element_text(angle = y_a, hjust = 1))
+    plot_ <- plot_ + theme(axis.text.y = element_text(angle = y_a, vjust = 1))
   } 
   return(plot_)
 }
@@ -427,3 +428,5 @@ point_plt <- function(ipch=c(0:25), cex = 3, col = "red3", bg = "gold", coltext 
     points(ix[i], iy[i], pch = pc, col = col, bg = bg, cex = cex, lwd = lwd)
     if(cextext > 0)
       text(ix[i] - 0.3, iy[i], pc, col = coltext, cex = cextext)}}
+
+
