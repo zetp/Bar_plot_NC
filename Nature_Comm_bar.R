@@ -378,13 +378,20 @@ manipulate_axis <- function(plot_, y_l, x_l, xy_ts, xy_ls, x_a=0, y_a=0){
     plot_ <- plot_ + xlab(x_l)
   }
   # angle for x axis text
-  h_just_x <- ifelse(x_a < 0, 0, 1) # to correct position of ext with negative degrees
+  # to correct position for negative degrees
+  h_just_x <- ifelse(x_a <= 0, 0, 1) 
+  if (x_a==0) {h_just_x <- 0.5} # special case for 0 angle
+  
   if(!missing(x_a)){
     plot_ <- plot_ + theme(axis.text.x = element_text(angle = x_a, hjust = h_just_x))
   } 
   # angle for y axis text
+  # to correct position for negative degrees
+  v_just_y <- ifelse(y_a < 0, 1, 0)
+  if (y_a==0) {v_just_y <- 0.5} # special case for 0 angle
+  
   if(!missing(y_a)){
-    plot_ <- plot_ + theme(axis.text.y = element_text(angle = y_a, vjust = 1))
+    plot_ <- plot_ + theme(axis.text.y = element_text(angle = y_a, vjust = v_just_y))
   } 
   return(plot_)
 }
