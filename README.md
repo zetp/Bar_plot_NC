@@ -5,7 +5,7 @@ Using R and Shiny - seems to be nice project for my first shiny app.
 
 ~~PointBar is now available [here](http://adz.ibb.waw.pl/pointbar/).~~
 UPDATE: as I am not working in this institute anymore, I have no access to this server
-and consequently so I cannot guarantee that app will work under this address
+and consequently I cannot guarantee that app will work under this address
 
 <html>
 
